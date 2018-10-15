@@ -29,7 +29,7 @@ namespace CloudApiVietnam.Models
         public static ApplicationDbContext Create()
         {
             return new ApplicationDbContext();
-        }
+        } 
         //Overide de standaard db structuur
 
 
