@@ -33,7 +33,7 @@ namespace CloudApiVietnam.Models
         //Overide de standaard db structuur
 
 
-        protected override void OnModelCreating(DbModelBuilder modelBuilder)
+        protected override void OnModelCreating(DbModelBuilder modelBuilder) 
         {
             base.OnModelCreating(modelBuilder);
             modelBuilder.Entity<User>().ToTable("Users");
