@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CloudApiVietnam.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -23,8 +24,9 @@ namespace CloudApiVietnam.Controllers
         }
 
         // POST api/values
-        public void Post([FromBody]string value)
+        public void Post(FormulierenBindingModel formContentBindingModel)
         {
+
         }
 
         // PUT api/values/5

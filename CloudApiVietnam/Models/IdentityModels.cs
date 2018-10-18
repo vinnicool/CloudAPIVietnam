@@ -25,7 +25,11 @@ namespace CloudApiVietnam.Models
             : base("DefaultConnection", throwIfV1Schema: false)
         {
         }
-        
+
+        public DbSet<Formulieren> Formulieren { get; set; }
+        public DbSet<FormContent> FormContent { get; set; }
+
+
         public static ApplicationDbContext Create()
         {
             return new ApplicationDbContext();
@@ -44,7 +48,7 @@ namespace CloudApiVietnam.Models
             modelBuilder.Entity<User>().ToTable("Users").Ignore(p => p.LockoutEnabled);
             modelBuilder.Entity<User>().ToTable("Users").Ignore(p => p.LockoutEndDateUtc);
             modelBuilder.Entity<User>().ToTable("Users").Ignore(p => p.AccessFailedCount);
-            modelBuilder.Ignore<IdentityUserLogin>();
+           // modelBuilder.Ignore<IdentityUserLogin>();
 
 
             //   modelBuilder.Ignore<IdentityUserClaim>();
