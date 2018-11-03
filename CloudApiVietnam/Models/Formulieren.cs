@@ -15,7 +15,7 @@ namespace CloudApiVietnam.Models
         [Required(ErrorMessage = "Naam is verplicht")]
         public string Name { get; set; }
         public string Region { get; set; }
-        public string FormTemplate { get; set; }
+        public FormTemplateModel FormTemplate { get; set; }
 
         [ForeignKey("FormulierenId")]
         public List<FormContent> FormContent { get; set; }

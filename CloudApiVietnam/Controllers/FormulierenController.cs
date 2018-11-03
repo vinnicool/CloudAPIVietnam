@@ -5,7 +5,6 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Web.Http;
-using static CloudApiVietnam.Models.IvoCustomModels;
 
 namespace CloudApiVietnam.Controllers
 {
@@ -15,28 +14,41 @@ namespace CloudApiVietnam.Controllers
         ApplicationDbContext db = new ApplicationDbContext();
 
         // GET alle Formulieren
-        public List<Formulieren> Get()
+        public List<FormulierWithoutContents> Get()
         {
             var formulieren = db.Formulieren.ToList();
+            List<FormulierWithoutContents> forms = new List<FormulierWithoutContents>();
             foreach(Formulieren form in formulieren)
             {
-                //Zet overige items op null om overbodige data te besparen
-                form.FormTemplate = null;
-                form.FormContent = null;
+                //Zet Formulieren uit db om in formulieren die van de call worden verwacht
+                FormulierWithoutContents formWithoutContent = new FormulierWithoutContents();
+                formWithoutContent.id = form.Id;
+                formWithoutContent.title = form.Name;
+                formWithoutContent.region = form.Region;
+                forms.Add(formWithoutContent);
             }
-            return formulieren;
+            return forms;
         }
 
         // GET specefiek Formulier
-        public SpecificForm Get(int id)
+        public FormTemplateModel Get(int id)
         {
             var formulier = db.Formulieren.Where(f => f.Id == id).FirstOrDefault();
-            SpecificForm form = new SpecificForm();
-            form.tableInfo.id = id;
-            form.tableInfo.region = formulier.Region;
-            form.tableInfo.title = formulier.Name;
-            var FormConverted = Newtonsoft.Json.JsonConvert.DeserializeObject<List<Column>>(formulier.FormTemplate);
-            form.columns = FormConverted;
+            FormTemplateModel form = new FormTemplateModel();
+            TableInfo info = new TableInfo(); 
+            info.id = id;
+            info.region = formulier.Region;
+            info.title = formulier.Name;
+            form.tableInfo = info;
+            try
+            {
+                //Als de JSON niet geconvert kan worden naar columns wordt de tableInfo zonder informatie terug gestuurd.
+                var FormConverted = Newtonsoft.Json.JsonConvert.DeserializeObject<List<Column>>(formulier.FormTemplate.ToString());
+                form.columns = FormConverted;
+            } catch
+            {
+                return form;
+            }
             return form;
         }
 
@@ -46,7 +58,14 @@ namespace CloudApiVietnam.Controllers
             Formulieren formulier = new Formulieren();
             formulier.Name = formContentBindingModel.Name;
             formulier.Region = formContentBindingModel.Region;
-            formulier.FormTemplate = formContentBindingModel.FormTemplate;
+            try
+            {
+                //Probeer de JSON die is verstuurd om te zetten naar een SpecificForm (Template), geef anders een error
+                formulier.FormTemplate = Newtonsoft.Json.JsonConvert.DeserializeObject<FormTemplateModel>(formContentBindingModel.FormTemplate);
+            } catch
+            {
+                return;
+            }
             
             db.Formulieren.Add(formulier);
             db.SaveChanges();
