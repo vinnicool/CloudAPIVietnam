@@ -14,7 +14,7 @@ namespace CloudApiVietnam.Models
 
 
         public int FormulierenId { get; set; }
-        public Formulieren Formulieren { get; set; }
+        //public Formulieren Formulieren { get; set; }
 
     }
 }

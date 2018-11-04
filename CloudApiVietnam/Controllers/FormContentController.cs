@@ -28,7 +28,7 @@ namespace CloudApiVietnam.Controllers
         }
 
         // POST een Formulier
-        public void Post(FormContentBindingModel formContentBindingModel)
+        public IHttpActionResult Post(FormContentBindingModel formContentBindingModel)
         {
             FormContent formContent = new FormContent();
             formContent.Content = formContentBindingModel.Content;
@@ -37,6 +37,7 @@ namespace CloudApiVietnam.Controllers
    
             db.FormContent.Add(formContent);
             db.SaveChanges();
+            return Ok();
         }
 
         // PUT api/values/5
@@ -45,12 +46,12 @@ namespace CloudApiVietnam.Controllers
         }
 
         // DELETE api/values/5
-        public void Delete(int id)
+        public IHttpActionResult Delete(int id)
         {
             var formulier = db.Formulieren.Where(f => f.Id == id).FirstOrDefault();
             db.Formulieren.Remove(formulier);
             db.SaveChanges();
-
+            return Ok();
         }
     }
 }
