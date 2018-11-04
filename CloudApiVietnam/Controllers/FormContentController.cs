@@ -1,4 +1,6 @@
 ﻿using CloudApiVietnam.Models;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -46,6 +48,11 @@ namespace CloudApiVietnam.Controllers
         {
             try
             {
+                IsJSON isJson = IsValidJson(formContentBindingModel.Content);
+                if (!isJson.Status)
+                {
+                    return Request.CreateErrorResponse(HttpStatusCode.BadRequest, "JSON in 'content' is not corret JSON: " + isJson.Error);
+                }
                 FormContent formContent = new FormContent();
                 formContent.Content = formContentBindingModel.Content;
                 formContent.FormulierenId = formContentBindingModel.FormId;
@@ -57,7 +64,7 @@ namespace CloudApiVietnam.Controllers
             }
             catch (Exception ex)
             {
-                return Request.CreateErrorResponse(HttpStatusCode.BadGateway, ex);
+                return Request.CreateErrorResponse(HttpStatusCode.BadRequest, ex);
             }
         }
 
@@ -93,8 +100,44 @@ namespace CloudApiVietnam.Controllers
                 db.SaveChanges();
                 return Request.CreateResponse(HttpStatusCode.OK);
             }
+        }
 
 
+        private static IsJSON IsValidJson(string strInput)
+        {
+            IsJSON result = new IsJSON();
+            strInput = strInput.Trim();
+            if ((strInput.StartsWith("{") && strInput.EndsWith("}")) || //For object
+                (strInput.StartsWith("[") && strInput.EndsWith("]"))) //For array
+            {
+                try
+                {
+                    var obj = JToken.Parse(strInput);
+                    result.Status = true;
+                    return result;
+                }
+                catch (JsonReaderException jex)
+                {
+                    //Exception in parsing json
+                    Console.WriteLine(jex.Message);
+                    result.Error = jex.Message;
+                    result.Status = false;
+                    return result;
+                }
+                catch (Exception ex) //some other exception
+                {
+                    Console.WriteLine(ex.ToString());
+                    result.Error = ex.ToString();
+                    result.Status = false;
+                    return result;
+                }
+            }
+            else
+            {
+                result.Status = false;
+                result.Error = "JSON doesn't start or and with with '{/}' or '[/]' ";
+                return result;
+            }
         }
     }
 }
