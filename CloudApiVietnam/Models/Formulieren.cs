@@ -18,7 +18,7 @@ namespace CloudApiVietnam.Models
         public string FormTemplate { get; set; }
 
         [ForeignKey("FormulierenId")]
-        public ICollection<FormContent> FormContent { get; set; }
+        public ICollection<FormContent> FormContent { get; set; } 
     }
 
 

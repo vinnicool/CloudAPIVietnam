@@ -13,45 +13,88 @@ namespace CloudApiVietnam.Controllers
     {
         ApplicationDbContext db = new ApplicationDbContext();
 
-        // GET alle Formulieren
-        public List<Formulieren> Get()
+        // GET alle FormContent
+        public HttpResponseMessage Get()
         {
-            var formulieren = db.Formulieren.ToList();
-            return formulieren;
+            try
+            {
+                var formContent = db.FormContent.ToList();
+                return Request.CreateResponse(HttpStatusCode.OK, formContent);
+            }
+            catch (Exception ex)
+            {
+                return Request.CreateErrorResponse(HttpStatusCode.BadRequest, ex);
+            }
         }
 
-        // GET specefiek Formulier
-        public Formulieren Get(int id)
+        // GET specefiek FormContent
+        public HttpResponseMessage Get(int id)
         {
-            var formulier = db.Formulieren.Where(f => f.Id == id).FirstOrDefault();
-            return formulier;
+            var formContent = db.FormContent.Where(f => f.Id == id).FirstOrDefault();
+            if (formContent == null)
+            {
+                return Request.CreateErrorResponse(HttpStatusCode.NotFound, "No FormContent found with id: " + id.ToString());
+            }
+            else
+            {
+                return Request.CreateResponse(HttpStatusCode.OK, formContent);
+            }
         }
 
-        // POST een Formulier
-        public IHttpActionResult Post(FormContentBindingModel formContentBindingModel)
+        // POST een FormContent
+        public HttpResponseMessage Post(FormContentBindingModel formContentBindingModel)
         {
-            FormContent formContent = new FormContent();
-            formContent.Content = formContentBindingModel.Content;
-            formContent.FormulierenId = formContentBindingModel.FormId;          
+            try
+            {
+                FormContent formContent = new FormContent();
+                formContent.Content = formContentBindingModel.Content;
+                formContent.FormulierenId = formContentBindingModel.FormId;
 
-   
-            db.FormContent.Add(formContent);
-            db.SaveChanges();
-            return Ok();
+
+                db.FormContent.Add(formContent);
+                db.SaveChanges();
+                return Request.CreateResponse(HttpStatusCode.OK);
+            }
+            catch (Exception ex)
+            {
+                return Request.CreateErrorResponse(HttpStatusCode.BadGateway, ex);
+            }
         }
 
-        // PUT api/values/5
-        public void Put(int id, [FromBody]string value)
+        // PUT FormContent by Id
+        public HttpResponseMessage Put(int id, [FromBody]FormContentBindingModel UpdateObject)
         {
+            var formContent = db.FormContent.Where(f => f.Id == id).FirstOrDefault();
+
+            if (formContent == null)
+            {
+                return Request.CreateErrorResponse(HttpStatusCode.NotFound, "No FormContent found with id: " + id.ToString());
+            }
+            else
+            {
+                formContent.FormulierenId = UpdateObject.FormId;
+                formContent.Content = UpdateObject.Content;
+                return Request.CreateResponse(HttpStatusCode.OK, formContent);
+            }
         }
 
-        // DELETE api/values/5
-        public IHttpActionResult Delete(int id)
+        // DELETE FormContent 
+        public HttpResponseMessage Delete(int id)
         {
-            var formulier = db.Formulieren.Where(f => f.Id == id).FirstOrDefault();
-            db.Formulieren.Remove(formulier);
-            db.SaveChanges();
-            return Ok();
+            var formContent = db.FormContent.Where(f => f.Id == id).FirstOrDefault();
+
+            if (formContent == null)
+            {
+                return Request.CreateErrorResponse(HttpStatusCode.NotFound, "No FormContent found with id: " + id.ToString());
+            }
+            else
+            {
+                db.FormContent.Remove(formContent);
+                db.SaveChanges();
+                return Request.CreateResponse(HttpStatusCode.OK);
+            }
+
+
         }
     }
 }
