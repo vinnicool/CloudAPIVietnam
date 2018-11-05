@@ -26,7 +26,7 @@ namespace CloudApiVietnam.Controllers
     {
         ApplicationDbContext db = new ApplicationDbContext();
         // To be set AzureStorage if not, sql database will be used to store images (less than 32gb)
-        private string ImageStoragetype = "AzureStorage";
+        private string ImageStoragetype = System.Configuration.ConfigurationManager.AppSettings["ImageStoragetype"];
         // GET specifieke Image
         [AllowAnonymous]
         public async Task<HttpResponseMessage> Get(string id)
@@ -64,9 +64,10 @@ namespace CloudApiVietnam.Controllers
                 }
             }
             else
-            {
+            {   
+                //try catch?
                 Image image = db.Image.Where(f => f.name == id).FirstOrDefault();
-                //imageStream. = image.image;
+                imageStream = new MemoryStream(image.image);
             }
 
             result = new HttpResponseMessage(HttpStatusCode.OK);
@@ -90,8 +91,12 @@ namespace CloudApiVietnam.Controllers
             }
             catch (Exception e)
             {
-                return CheckIfFileIsToBig(e);
-
+                if (provider.Contents.Count == 0) {
+                    return Content(HttpStatusCode.BadRequest, "Uploaded file was not received, missing image or wrong content-type header");
+                } else {
+                    return CheckIfFileIsToBig(e);
+                }
+                
             }
             List<Image> imageList = new List<Image>();
             foreach (var file in provider.Contents)
@@ -127,8 +132,12 @@ namespace CloudApiVietnam.Controllers
                 {
                     try
                     {
-                        //SqlStorage(imageStream, blobNameReference);
-                        //imageList.Add(blobNameReference);
+                        Image image = new Image();
+                        image.name = blobNameReference;
+                        image.image = ConvertStreamToBytes(imageStream);
+                        SqlStorage(image);
+                        image.image = null;
+                        imageList.Add(image);
 
                     }
                     catch (Exception e)
@@ -143,6 +152,7 @@ namespace CloudApiVietnam.Controllers
 
         private IHttpActionResult CheckIfFileIsToBig(Exception e)
         {
+            // Returning a clean file is to big message.
             List<string> errors = new List<string> { "De maximale aanvraaglengte is overschreden.", "Maximum request length exceeded.", "Độ dài yêu cầu tối đa đã bị vượt quá" };
             bool contains = errors.Contains(e.InnerException.Message, StringComparer.OrdinalIgnoreCase);
             if (contains)
@@ -172,7 +182,8 @@ namespace CloudApiVietnam.Controllers
         {
             // Get storage account
             CloudStorageAccount storageAccount = new CloudStorageAccount(
-            new Microsoft.WindowsAzure.Storage.Auth.StorageCredentials("vietnamcloud", "3yD7TzCjwYab4BKJvxSjX5EVvihI3gz1FGvRehtJUch3JTqWku1TLv8nRrASdXCxKrI/7GzbiHiZOtd8QuEJ5g=="), true);
+            new Microsoft.WindowsAzure.Storage.Auth.StorageCredentials(System.Configuration.ConfigurationManager.AppSettings["azureStorageAccount"],
+            System.Configuration.ConfigurationManager.AppSettings["azureStorageAccountKey"]), true);
 
             // Create Blob reference
             var blobClient = storageAccount.CreateCloudBlobClient();
@@ -182,9 +193,8 @@ namespace CloudApiVietnam.Controllers
 
         // DELETE api/values/5
         [AllowAnonymous]
-        public async Task Delete(string id)
-        {//string reference
-            //string reference = "1c836831-4d83-4bcd-99cc-29907e12942a.jpeg";
+        public async Task<IHttpActionResult> Delete(string id)
+        {
             if (ImageStoragetype == "AzureStorage")
             {
                 var container = getStorageAccount();
@@ -196,20 +206,39 @@ namespace CloudApiVietnam.Controllers
             }
             else
             {
-                var image = db.Image.Where(f => f.name == id).FirstOrDefault();
-                db.Image.Remove(image);
-                db.SaveChanges();
+                try
+                {
+                    var image = db.Image.Where(f => f.name == id).FirstOrDefault();
+                    db.Image.Remove(image);
+                    db.SaveChanges();
+                }
+                catch (Exception e) {
+                    return Content(HttpStatusCode.InternalServerError, e.Message);
+                }
             }
+
+            return Content(HttpStatusCode.NoContent, "");
         }
 
-        private void SqlStorage(MemoryStream imageStream, string blobNameReference)
+        private void SqlStorage(Image image)
         {
-            Image image = new Image();
-            image.name = blobNameReference;
-            image.image = imageStream;
-
             db.Image.Add(image);
+            
             db.SaveChanges();
+        }
+
+        private byte[] ConvertStreamToBytes(Stream input)
+        {
+            byte[] buffer = new byte[16 * 1024];
+            using (MemoryStream ms = new MemoryStream())
+            {
+                int read;
+                while ((read = input.Read(buffer, 0, buffer.Length)) > 0)
+                {
+                    ms.Write(buffer, 0, read);
+                }
+                return ms.ToArray();
+            }
         }
     }
 }

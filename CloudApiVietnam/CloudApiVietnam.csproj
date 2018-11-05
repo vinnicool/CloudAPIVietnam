@@ -301,12 +301,15 @@
     <Compile Include="Migrations\201810181550150_FormulierEnFormContentUpdate2.Designer.cs">
       <DependentUpon>201810181550150_FormulierEnFormContentUpdate2.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201811051047016_Image.cs" />
+    <Compile Include="Migrations\201811051047016_Image.Designer.cs">
+      <DependentUpon>201811051047016_Image.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\AccountBindingModels.cs" />
     <Compile Include="Models\AccountViewModels.cs" />
     <Compile Include="Models\FormContent.cs" />
     <Compile Include="Models\FormContentBindingModel.cs" />
-    <Compile Include="Models\IFormFile.cs" />
     <Compile Include="Models\ImageBindingModel.cs" />
     <Compile Include="Models\Image.cs" />
     <Compile Include="Models\FormulierenBindingModel.cs" />
@@ -466,6 +469,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201810181550150_FormulierEnFormContentUpdate2.resx">
       <DependentUpon>201810181550150_FormulierEnFormContentUpdate2.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201811051047016_Image.resx">
+      <DependentUpon>201811051047016_Image.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>

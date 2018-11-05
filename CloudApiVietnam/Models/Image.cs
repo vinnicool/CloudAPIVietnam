@@ -12,7 +12,7 @@ namespace CloudApiVietnam.Models
     {
         [Key]
         public string name { get; set; }
-        public Stream image { get; set; }
+        public Byte[] image { get; set; }
         
     }
 
