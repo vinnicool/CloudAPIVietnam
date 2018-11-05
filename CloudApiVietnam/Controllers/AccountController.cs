@@ -59,11 +59,23 @@ namespace CloudApiVietnam.Controllers
         {
             ExternalLoginData externalLogin = ExternalLoginData.FromIdentity(User.Identity as ClaimsIdentity);
 
+            string userRole;
+
+            if (User.IsInRole("Admin"))
+            {
+                userRole = "Admin";
+            }
+            else
+            {
+                userRole = "User";
+            }
+
             return new UserInfoViewModel
             {
                 Email = User.Identity.GetUserName(),
-                HasRegistered = externalLogin == null,
-                LoginProvider = externalLogin != null ? externalLogin.LoginProvider : null
+                Id = User.Identity.GetUserId(), 
+                Name = User.Identity.Name,
+                UserRole = userRole
             };
         }
 
