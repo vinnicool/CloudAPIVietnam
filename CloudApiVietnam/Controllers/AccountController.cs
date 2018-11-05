@@ -16,6 +16,8 @@ using Microsoft.Owin.Security.OAuth;
 using CloudApiVietnam.Models;
 using CloudApiVietnam.Providers;
 using CloudApiVietnam.Results;
+using System.Linq;
+using System.Net;
 
 namespace CloudApiVietnam.Controllers
 {
@@ -25,6 +27,7 @@ namespace CloudApiVietnam.Controllers
     {
         private const string LocalLoginProvider = "Local";
         private ApplicationUserManager _userManager;
+        ApplicationDbContext db = new ApplicationDbContext();
 
         public AccountController()
         {
@@ -77,6 +80,36 @@ namespace CloudApiVietnam.Controllers
                 Name = User.Identity.Name,
                 UserRole = userRole
             };
+        }
+
+        // GET api/Account/User/{id}
+        [HostAuthentication(DefaultAuthenticationTypes.ExternalBearer)]
+        [Route("User/{id}")]
+        public HttpResponseMessage GetUserInfo(int id)
+        {
+            var user = db.Users.Where(u => u.Id == id.ToString()).FirstOrDefault();
+            var role = db.Role.Where(u => u.UserId == id).FirstOrDefault();
+
+            string userRole;
+
+            if (role.RoleId == '1')
+            {
+                userRole = "Admin";
+            }
+            else
+            {
+                userRole = "User";
+            }
+
+            UserInfoViewModel userModel =  new UserInfoViewModel
+            {
+                Email = user.Email,
+                Id = user.Id,
+                Name = user.UserName, 
+                UserRole = userRole
+            };
+
+            return Request.CreateResponse(HttpStatusCode.OK, userModel);
         }
 
         // POST api/Account/Logout

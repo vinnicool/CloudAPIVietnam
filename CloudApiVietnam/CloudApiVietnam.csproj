@@ -301,13 +301,22 @@
     <Compile Include="Migrations\201810181550150_FormulierEnFormContentUpdate2.Designer.cs">
       <DependentUpon>201810181550150_FormulierEnFormContentUpdate2.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201811042230004_FormulierenIdIsReqeured.cs" />
+    <Compile Include="Migrations\201811042230004_FormulierenIdIsReqeured.Designer.cs">
+      <DependentUpon>201811042230004_FormulierenIdIsReqeured.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\201811051047016_Image.cs" />
     <Compile Include="Migrations\201811051047016_Image.Designer.cs">
       <DependentUpon>201811051047016_Image.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201811051422398_UserRoleAdded.cs" />
+    <Compile Include="Migrations\201811051422398_UserRoleAdded.Designer.cs">
+      <DependentUpon>201811051422398_UserRoleAdded.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\AccountBindingModels.cs" />
     <Compile Include="Models\AccountViewModels.cs" />
+    <Compile Include="Models\ContentEqeulsHeadersCheck.cs" />
     <Compile Include="Models\FormContent.cs" />
     <Compile Include="Models\FormContentBindingModel.cs" />
     <Compile Include="Models\ImageBindingModel.cs" />
@@ -315,6 +324,11 @@
     <Compile Include="Models\FormulierenBindingModel.cs" />
     <Compile Include="Models\Formulieren.cs" />
     <Compile Include="Models\IdentityModels.cs" />
+    <Compile Include="Models\isJSON.cs" />
+    <Compile Include="Models\UserRole.cs" />
+    <Compile Include="obj\Debug\TemporaryGeneratedFile_036C0B5B-1481-4323-8D20-8F5ADCB23D92.cs" />
+    <Compile Include="obj\Debug\TemporaryGeneratedFile_5937a670-0e60-4077-877b-f7221da3dda1.cs" />
+    <Compile Include="obj\Debug\TemporaryGeneratedFile_E7A71F73-0F8D-4B9B-B56E-8E70B10BC5D3.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Providers\ApplicationOAuthProvider.cs" />
     <Compile Include="Results\ChallengeResult.cs" />
@@ -333,6 +347,9 @@
     <Content Include="ApplicationInsights.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="obj\Debug\CloudApiVietnam.csproj.FileListAbsolute.txt" />
+    <Content Include="obj\Debug\CloudApiVietnam.dll" />
+    <Content Include="obj\Debug\CloudApiVietnam.pdb" />
     <Content Include="Scripts\bootstrap.bundle.js" />
     <Content Include="Scripts\bootstrap.bundle.min.js" />
     <Content Include="Scripts\bootstrap.js" />
@@ -374,6 +391,13 @@
     <Content Include="Scripts\esm\popper.js.map" />
     <Content Include="Scripts\esm\popper-utils.min.js.map" />
     <Content Include="Scripts\esm\popper-utils.js.map" />
+    <Content Include="obj\Debug\CloudApiVietnam.csproj.CopyComplete" />
+    <Content Include="obj\Debug\CloudApiVietnam.csproj.CoreCompileInputs.cache" />
+    <Content Include="obj\Debug\CloudApiVietnam.csproj.GenerateResource.cache" />
+    <Content Include="obj\Debug\CloudApiVietnam.csprojAssemblyReference.cache" />
+    <Content Include="obj\Debug\DesignTimeResolveAssemblyReferences.cache" />
+    <Content Include="obj\Debug\DesignTimeResolveAssemblyReferencesInput.cache" />
+    <Content Include="obj\Release\CloudApiVietnam.csproj.CoreCompileInputs.cache" />
     <None Include="Scripts\jquery-3.3.1.intellisense.js" />
     <Content Include="Scripts\jquery-3.3.1.js" />
     <Content Include="Scripts\jquery-3.3.1.min.js" />
@@ -419,6 +443,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
+    <Folder Include="obj\Debug\TempPE\" />
     <Folder Include="Views\FormcCntent\" />
     <Folder Include="Views\Formulieren\" />
   </ItemGroup>
@@ -470,9 +495,30 @@
     <EmbeddedResource Include="Migrations\201810181550150_FormulierEnFormContentUpdate2.resx">
       <DependentUpon>201810181550150_FormulierEnFormContentUpdate2.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201811042230004_FormulierenIdIsReqeured.resx">
+      <DependentUpon>201811042230004_FormulierenIdIsReqeured.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201811051047016_Image.resx">
       <DependentUpon>201811051047016_Image.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201811051422398_UserRoleAdded.resx">
+      <DependentUpon>201811051422398_UserRoleAdded.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="obj\Debug\CloudApiVietnam.Migrations.AddedFirstName.resources" />
+    <EmbeddedResource Include="obj\Debug\CloudApiVietnam.Migrations.change2.resources" />
+    <EmbeddedResource Include="obj\Debug\CloudApiVietnam.Migrations.change3.resources" />
+    <EmbeddedResource Include="obj\Debug\CloudApiVietnam.Migrations.change4.resources" />
+    <EmbeddedResource Include="obj\Debug\CloudApiVietnam.Migrations.Changed_ASPnetUser_to_User.resources" />
+    <EmbeddedResource Include="obj\Debug\CloudApiVietnam.Migrations.cleanupUsersTable.resources" />
+    <EmbeddedResource Include="obj\Debug\CloudApiVietnam.Migrations.cleanupUsersTable2.resources" />
+    <EmbeddedResource Include="obj\Debug\CloudApiVietnam.Migrations.cleanupUsersTable3.resources" />
+    <EmbeddedResource Include="obj\Debug\CloudApiVietnam.Migrations.FormulierEnFormContentGemaakt.resources" />
+    <EmbeddedResource Include="obj\Debug\CloudApiVietnam.Migrations.FormulierEnFormContentUpdate.resources" />
+    <EmbeddedResource Include="obj\Debug\CloudApiVietnam.Migrations.FormulierEnFormContentUpdate2.resources" />
+    <EmbeddedResource Include="obj\Debug\CloudApiVietnam.Migrations.FormulierenIdIsReqeured.resources" />
+    <EmbeddedResource Include="obj\Debug\CloudApiVietnam.Migrations.IgnoreUserLogins.resources" />
+    <EmbeddedResource Include="obj\Debug\CloudApiVietnam.Migrations.IgnoreUserLogins3.resources" />
+    <EmbeddedResource Include="obj\Debug\CloudApiVietnam.Migrations.InitialCreate.resources" />
   </ItemGroup>
   <ItemGroup>
     <Service Include="{4A0DDDB5-7A95-4FBF-97CC-616D07737A77}" />
