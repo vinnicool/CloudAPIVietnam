@@ -28,6 +28,7 @@ namespace CloudApiVietnam.Models
 
         public DbSet<Formulieren> Formulieren { get; set; }
         public DbSet<FormContent> FormContent { get; set; }
+        public DbSet<Image> Image { get; set; }
 
 
         public static ApplicationDbContext Create()
