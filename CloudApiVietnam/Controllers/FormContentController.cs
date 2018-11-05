@@ -48,11 +48,18 @@ namespace CloudApiVietnam.Controllers
         {
             try
             {
-                IsJSON isJson = IsValidJson(formContentBindingModel.Content);
-                if (!isJson.Status)
+                IsJSON isJson = IsValidJson(formContentBindingModel.Content); // Check of JSON klopt en maak resultaat object
+                if (!isJson.Status) // als resultaat object status fals is return error
                 {
                     return Request.CreateErrorResponse(HttpStatusCode.BadRequest, "JSON in 'content' is not corret JSON: " + isJson.Error);
                 }
+
+                var headersCheck = ContentEqeulsHeaders(formContentBindingModel);
+                if (!headersCheck.Status)
+                {
+                    return Request.CreateErrorResponse(HttpStatusCode.BadRequest, headersCheck.Error);
+                }
+
                 FormContent formContent = new FormContent();
                 formContent.Content = formContentBindingModel.Content;
                 formContent.FormulierenId = formContentBindingModel.FormId;
@@ -138,6 +145,31 @@ namespace CloudApiVietnam.Controllers
                 result.Error = "JSON doesn't start or and with with '{/}' or '[/]' ";
                 return result;
             }
+        }
+
+        private ContentEqeulsHeadersCheck ContentEqeulsHeaders(FormContentBindingModel formContentBindingModel)
+        {
+            ContentEqeulsHeadersCheck result = new ContentEqeulsHeadersCheck();
+            var Formulier = db.Formulieren.Where(f => f.Id == formContentBindingModel.FormId).FirstOrDefault(); //Haalt bijbehorende formulier op
+
+            var obj = JToken.Parse(formContentBindingModel.Content); //Maak object van mee gegeven content
+
+            foreach (var item in obj) //loop door mee gegeven content
+            {
+                //Pak de propery naam
+                string jsonName = item.First.Path.ToString();
+                var splitPath = jsonName.Split('.');
+                string propertyName = splitPath[1];
+
+                if (!Formulier.FormTemplate.Contains(propertyName))
+                {
+                    result.Status = false;
+                    result.Error = "'" + propertyName+ "'" + " is not found in the headers of the matching Formulier";
+                    return result;
+                }
+            }
+            result.Status = true;
+            return result;
         }
     }
 }

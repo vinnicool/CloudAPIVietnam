@@ -12,10 +12,11 @@ namespace CloudApiVietnam.Models
         [Key]
         public int Id { get; set; }
 
-        [Required(ErrorMessage = "Naam is verplicht")]
+        [Required(ErrorMessage = "Name is requierd")]
         public string Name { get; set; }
         public string Region { get; set; }
         public string FormTemplate { get; set; }
+
 
         [ForeignKey("FormulierenId")]
         public ICollection<FormContent> FormContent { get; set; } 
