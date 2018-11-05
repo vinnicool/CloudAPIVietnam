@@ -16,6 +16,8 @@ using Microsoft.Owin.Security.OAuth;
 using CloudApiVietnam.Models;
 using CloudApiVietnam.Providers;
 using CloudApiVietnam.Results;
+using System.Linq;
+using System.Net;
 
 namespace CloudApiVietnam.Controllers
 {
@@ -23,6 +25,7 @@ namespace CloudApiVietnam.Controllers
     [RoutePrefix("api/Account")]
     public class AccountController : ApiController
     {
+        ApplicationDbContext db = new ApplicationDbContext();
         private const string LocalLoginProvider = "Local";
         private ApplicationUserManager _userManager;
 
@@ -51,6 +54,52 @@ namespace CloudApiVietnam.Controllers
         }
 
         public ISecureDataFormat<AuthenticationTicket> AccessTokenFormat { get; private set; }
+
+
+        [Authorize (Roles ="Admin")]
+        public HttpResponseMessage Get()
+        {
+            try
+            {
+                List<UserInfo> usersInfo = new List<UserInfo>();
+                var users = db.Users.ToList();
+                foreach (User user in users)
+                {
+                    UserInfo info = new UserInfo();
+                    info.Id = user.Id;
+                    info.Email = user.Email;
+                    info.Roles = user.Roles;
+                    info.UserName = user.UserName;
+                    usersInfo.Add(info);
+                }
+
+                return Request.CreateResponse(HttpStatusCode.OK, usersInfo);
+            }
+            catch (Exception ex)
+            {
+                return Request.CreateErrorResponse(HttpStatusCode.BadRequest, ex);
+            }
+        }
+
+
+        [Authorize(Roles = "Admin")]
+        public HttpResponseMessage Get(string id)
+        {
+            try
+            {
+                User user = db.Users.Where(u => u.Id == id).FirstOrDefault();
+                UserInfo info = new UserInfo();
+                info.Id = user.Id;
+                info.Email = user.Email;
+                info.Roles = user.Roles;
+                info.UserName = user.UserName;
+                return Request.CreateResponse(HttpStatusCode.OK, info);
+            }
+            catch (Exception ex)
+            {
+                return Request.CreateErrorResponse(HttpStatusCode.BadRequest, ex);
+            }
+        }
 
         // GET api/Account/UserInfo
         [HostAuthentication(DefaultAuthenticationTypes.ExternalBearer)]
@@ -332,7 +381,8 @@ namespace CloudApiVietnam.Controllers
         }
 
         // POST api/Account/Register
-        [Authorize(Roles = "Admin")]
+      //  [Authorize(Roles = "Admin")]
+      [AllowAnonymous]
         [Route("Register")]
         public async Task<IHttpActionResult> Register(RegisterBindingModel model)
         {
@@ -340,16 +390,16 @@ namespace CloudApiVietnam.Controllers
             {
                 return BadRequest(ModelState);
             }
-
+    
             var user = new User() { UserName = model.Email, Email = model.Email };
-
+           
             IdentityResult result = await UserManager.CreateAsync(user, model.Password);
 
             if (!result.Succeeded)
             {
                 return GetErrorResult(result);
             }
-
+            UserManager.AddToRole(user.Id, model.UserRole);
             return Ok();
         }
 
