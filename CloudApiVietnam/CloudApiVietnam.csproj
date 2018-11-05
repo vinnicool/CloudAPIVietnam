@@ -304,7 +304,6 @@
     <Compile Include="Models\FormulierenBindingModel.cs" />
     <Compile Include="Models\Formulieren.cs" />
     <Compile Include="Models\IdentityModels.cs" />
-    <Compile Include="Models\IvoCustomModels.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Providers\ApplicationOAuthProvider.cs" />
     <Compile Include="Results\ChallengeResult.cs" />
