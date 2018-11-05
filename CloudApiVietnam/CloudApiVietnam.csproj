@@ -296,14 +296,20 @@
     <Compile Include="Migrations\201810181550150_FormulierEnFormContentUpdate2.Designer.cs">
       <DependentUpon>201810181550150_FormulierEnFormContentUpdate2.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201811042230004_FormulierenIdIsReqeured.cs" />
+    <Compile Include="Migrations\201811042230004_FormulierenIdIsReqeured.Designer.cs">
+      <DependentUpon>201811042230004_FormulierenIdIsReqeured.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\AccountBindingModels.cs" />
     <Compile Include="Models\AccountViewModels.cs" />
+    <Compile Include="Models\ContentEqeulsHeadersCheck.cs" />
     <Compile Include="Models\FormContent.cs" />
     <Compile Include="Models\FormContentBindingModel.cs" />
     <Compile Include="Models\FormulierenBindingModel.cs" />
     <Compile Include="Models\Formulieren.cs" />
     <Compile Include="Models\IdentityModels.cs" />
+    <Compile Include="Models\IsJSON.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Providers\ApplicationOAuthProvider.cs" />
     <Compile Include="Results\ChallengeResult.cs" />
@@ -444,6 +450,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201810181550150_FormulierEnFormContentUpdate2.resx">
       <DependentUpon>201810181550150_FormulierEnFormContentUpdate2.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201811042230004_FormulierenIdIsReqeured.resx">
+      <DependentUpon>201811042230004_FormulierenIdIsReqeured.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>

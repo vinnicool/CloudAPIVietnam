@@ -14,9 +14,9 @@ namespace CloudApiVietnam.Controllers
         ApplicationDbContext db = new ApplicationDbContext();
 
         // GET alle Formulieren
-        public List<Formulieren> Get()
+        public ICollection<Formulieren> Get()
         {
-            var formulieren = db.Formulieren.ToList();
+            var formulieren = db.Formulieren.Include("FormContent").ToList();
             return formulieren;
         }
 
@@ -28,7 +28,7 @@ namespace CloudApiVietnam.Controllers
         }
 
         // POST een Formulier
-        public void Post(FormulierenBindingModel formContentBindingModel)
+        public IHttpActionResult Post(FormulierenBindingModel formContentBindingModel)
         {
             Formulieren formulier = new Formulieren();
             formulier.Name = formContentBindingModel.Name;
@@ -37,6 +37,8 @@ namespace CloudApiVietnam.Controllers
             
             db.Formulieren.Add(formulier);
             db.SaveChanges();
+
+            return Ok();
         }
 
         // PUT api/values/5
@@ -45,12 +47,12 @@ namespace CloudApiVietnam.Controllers
         }
 
         // DELETE api/values/5
-        public void Delete(int id)
+        public IHttpActionResult Delete(int id)
         {
             var formulier = db.Formulieren.Where(f => f.Id == id).FirstOrDefault();
             db.Formulieren.Remove(formulier);
             db.SaveChanges();
-
+            return Ok();
         }
     }
 }

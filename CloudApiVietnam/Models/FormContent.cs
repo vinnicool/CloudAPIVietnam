@@ -13,8 +13,9 @@ namespace CloudApiVietnam.Models
         public string Content { get; set; }
 
 
+        [Required(ErrorMessage = "FormulierenId is requierd")]
         public int FormulierenId { get; set; }
-        public Formulieren Formulieren { get; set; }
+        //public Formulieren Formulieren { get; set; }
 
     }
 }
