@@ -320,7 +320,8 @@ namespace CloudApiVietnam.Controllers
         }
 
         // POST api/Account/Register
-        [Authorize(Roles = "Admin")]
+      //  [Authorize(Roles = "Admin")]
+      [AllowAnonymous]
         [Route("Register")]
         public async Task<IHttpActionResult> Register(RegisterBindingModel model)
         {
@@ -328,16 +329,16 @@ namespace CloudApiVietnam.Controllers
             {
                 return BadRequest(ModelState);
             }
-
+    
             var user = new User() { UserName = model.Email, Email = model.Email };
-
+           
             IdentityResult result = await UserManager.CreateAsync(user, model.Password);
 
             if (!result.Succeeded)
             {
                 return GetErrorResult(result);
             }
-
+            UserManager.AddToRole(user.Id, model.UserRole);
             return Ok();
         }
 
