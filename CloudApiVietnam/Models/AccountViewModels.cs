@@ -29,9 +29,11 @@ namespace CloudApiVietnam.Models
     {
         public string Email { get; set; }
 
-        public bool HasRegistered { get; set; }
+        public string Id { get; set; }
 
-        public string LoginProvider { get; set; }
+        public string Name { get; set; }
+
+        public string UserRole { get; set; }
     }
 
     public class UserLoginInfoViewModel
