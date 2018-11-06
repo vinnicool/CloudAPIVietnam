@@ -8,6 +8,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using CloudApiVietnam;
 using CloudApiVietnam.Controllers;
 using CloudApiVietnam.Models;
+using System.Net;
 
 namespace CloudApiVietnam.Tests.Controllers
 {
@@ -15,20 +16,29 @@ namespace CloudApiVietnam.Tests.Controllers
     public class FormContentControllerTest
     {
 
-        // Arrange
-        FormContentController controller = new FormContentController();
+        // Arrange();
+        FormContentController controller = new FormContentController
+        {
+            Request = new System.Net.Http.HttpRequestMessage(),
+            Configuration = new HttpConfiguration()
+        };
 
         [TestMethod]
         public void Post()
         {
-            FormContentBindingModel formContentBindingModel = new FormContentBindingModel();
-            formContentBindingModel.Content = "[{'Naam':'Joep'},{'Leeftijd':'22'},{'Afwijking':'ADHD'}]";
-            formContentBindingModel.FormId = 9;
+            FormContentBindingModel formContentBindingModel = new FormContentBindingModel
+            {
+                Content = "[{'Naam':'testnaam'},{'Leeftijd':'22'},{'Afwijking':'ADHD'}]",
+                FormId = 3
+            };
 
             // Act
-            var result = controller.Post(formContentBindingModel);
-            int ok = 1;
+            HttpResponseMessage result = controller.Post(formContentBindingModel);
+
             // Assert
+            int i = 1;
+            Assert.AreEqual(result.StatusCode, HttpStatusCode.OK);
+                        
         }
 
         //[TestMethod]
@@ -58,7 +68,7 @@ namespace CloudApiVietnam.Tests.Controllers
         //    Assert.AreEqual("value", result);
         //}
 
-      
+
 
         //[TestMethod]
         //public void Put()

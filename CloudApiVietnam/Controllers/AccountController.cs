@@ -124,24 +124,45 @@ namespace CloudApiVietnam.Controllers
             return Ok();
         }
                
+        //[AllowAnonymous]
+        //public async Task<IHttpActionResult> Post(RegisterBindingModel model)
+        //{
+        //    if (!ModelState.IsValid)
+        //    {
+        //        return BadRequest(ModelState);
+        //    }
+
+        //    var user = new User() { UserName = model.Email, Email = model.Email };
+
+        //    IdentityResult result = await UserManager.CreateAsync(user, model.Password);
+
+        //    if (!result.Succeeded)
+        //    {
+        //        return GetErrorResult(result);
+        //    }
+        //    UserManager.AddToRole(user.Id, model.UserRole);
+        //    return Ok();
+        //}
+
         [AllowAnonymous]
-        public async Task<IHttpActionResult> Post(RegisterBindingModel model)
+        public HttpResponseMessage Post(RegisterBindingModel model)
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                return Request.CreateErrorResponse(HttpStatusCode.NotFound, ModelState);
             }
 
             var user = new User() { UserName = model.Email, Email = model.Email };
 
-            IdentityResult result = await UserManager.CreateAsync(user, model.Password);
+            IdentityResult result = UserManager.Create(user, model.Password);
 
             if (!result.Succeeded)
             {
-                return GetErrorResult(result);
+
+                return Request.CreateErrorResponse(HttpStatusCode.NotFound, result.Errors.ToString());
             }
             UserManager.AddToRole(user.Id, model.UserRole);
-            return Ok();
+            return Request.CreateResponse(HttpStatusCode.OK, user);
         }
 
 

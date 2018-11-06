@@ -70,6 +70,7 @@ namespace CloudApiVietnam.Controllers
 
                 db.FormContent.Add(formContent);
                 db.SaveChanges();
+
                 return Request.CreateResponse(HttpStatusCode.OK);
             }
             catch (Exception ex)
