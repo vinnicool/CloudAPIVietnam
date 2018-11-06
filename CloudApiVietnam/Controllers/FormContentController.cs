@@ -61,9 +61,11 @@ namespace CloudApiVietnam.Controllers
                     return Request.CreateErrorResponse(HttpStatusCode.BadRequest, headersCheck.Error);
                 }
 
-                FormContent formContent = new FormContent();
-                formContent.Content = formContentBindingModel.Content;
-                formContent.FormulierenId = formContentBindingModel.FormId;
+                FormContent formContent = new FormContent
+                {
+                    Content = formContentBindingModel.Content,
+                    FormulierenId = formContentBindingModel.FormId
+                };
 
 
                 db.FormContent.Add(formContent);
@@ -87,10 +89,17 @@ namespace CloudApiVietnam.Controllers
             }
             else
             {
-                formContent.FormulierenId = UpdateObject.FormId;
-                formContent.Content = UpdateObject.Content;
-                db.SaveChanges();
-                return Request.CreateResponse(HttpStatusCode.OK, formContent);
+                try
+                {
+                    formContent.FormulierenId = UpdateObject.FormId;
+                    formContent.Content = UpdateObject.Content;
+                    db.SaveChanges();
+                    return Request.CreateResponse(HttpStatusCode.OK, formContent);
+                }
+                catch (Exception ex)
+                {
+                    return Request.CreateErrorResponse(HttpStatusCode.InternalServerError, ex);
+                }
             }
         }
 
@@ -98,16 +107,23 @@ namespace CloudApiVietnam.Controllers
         public HttpResponseMessage Delete(int id)
         {
             var formContent = db.FormContent.Where(f => f.Id == id).FirstOrDefault();
-
+            
             if (formContent == null)
             {
                 return Request.CreateErrorResponse(HttpStatusCode.NotFound, "No FormContent found with id: " + id.ToString());
             }
             else
             {
-                db.FormContent.Remove(formContent);
-                db.SaveChanges();
-                return Request.CreateResponse(HttpStatusCode.OK);
+                try
+                {
+                    db.FormContent.Remove(formContent);
+                    db.SaveChanges();
+                    return Request.CreateResponse(HttpStatusCode.OK);
+                }
+                catch (Exception ex)
+                {
+                    return Request.CreateErrorResponse(HttpStatusCode.InternalServerError, ex);
+                }
             }
         }
 

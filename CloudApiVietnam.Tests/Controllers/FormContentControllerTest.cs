@@ -22,8 +22,8 @@ namespace CloudApiVietnam.Tests.Controllers
         public void Post()
         {
             FormContentBindingModel formContentBindingModel = new FormContentBindingModel();
-            formContentBindingModel.Content = "{testTitle:testData}";
-            formContentBindingModel.FormId = 5;
+            formContentBindingModel.Content = "[{'Naam':'Joep'},{'Leeftijd':'22'},{'Afwijking':'ADHD'}]";
+            formContentBindingModel.FormId = 9;
 
             // Act
             var result = controller.Post(formContentBindingModel);
