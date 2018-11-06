@@ -11,6 +11,7 @@ pipelines:
         services:
           - docker
         script: 
+         - docker login --username $DOCKER_HUB_USERNAME --password $DOCKER_HUB_PASSWORD
          - export PROJECT_NAME=CloudApiVietnam
          - export TEST_NAME=CloudApiVietnam.Tests
          - dotnet restore
