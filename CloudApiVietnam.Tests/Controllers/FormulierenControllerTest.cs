@@ -17,8 +17,9 @@ namespace CloudApiVietnam.Tests.Controllers
     public class FormulierenControllerTest
     {
         FormulierenController controller = new FormulierenController();
-
+        private int id;
         [TestMethod]
+        [TestInitialize()]
         public void FormGet_Ok()
         {
             // Arramge
@@ -28,6 +29,9 @@ namespace CloudApiVietnam.Tests.Controllers
             HttpResponseMessage actionResult = controller.Get();
 
             // Assert
+            List<Formulieren> formulier;
+            Assert.IsTrue(actionResult.TryGetContentValue<List<Formulieren>>(out formulier));
+            this.id = formulier[0].Id;
             Assert.AreEqual(actionResult.StatusCode, HttpStatusCode.OK);
         }
 
@@ -48,7 +52,7 @@ namespace CloudApiVietnam.Tests.Controllers
 
             // Act
             //How to determine wich id to pass?
-            HttpResponseMessage actionResult = controller.Get(9);
+            HttpResponseMessage actionResult = controller.Get(this.id);
 
             // Assert
             Assert.AreEqual(actionResult.StatusCode, HttpStatusCode.OK);
@@ -61,7 +65,7 @@ namespace CloudApiVietnam.Tests.Controllers
             FormulierenController controller = GetController();
 
             // Act
-            HttpResponseMessage actionResult = controller.Get(9999999);
+            HttpResponseMessage actionResult = controller.Get(-2);
 
             // Assert
             Assert.AreEqual(actionResult.StatusCode, HttpStatusCode.NotFound);
@@ -111,13 +115,14 @@ namespace CloudApiVietnam.Tests.Controllers
 
             // Act
             //How to determine wich id to pass?
-            HttpResponseMessage actionResult = controller.Get(9999999);
+            HttpResponseMessage actionResult = controller.Get(-2);
 
             // Assert
             Assert.AreEqual(actionResult.StatusCode, HttpStatusCode.NotFound);
         }
 
         [TestMethod]
+        [TestCleanup()]
         public void FormDeleteWithId_NoContent()
         {
             // Arramge
@@ -125,7 +130,7 @@ namespace CloudApiVietnam.Tests.Controllers
 
             // Act
             //How to determine wich id to pass?
-            HttpResponseMessage actionResult = controller.Get(9999999);
+            HttpResponseMessage actionResult = controller.Get(this.id);
 
             // Assert
             Assert.AreEqual(actionResult.StatusCode, HttpStatusCode.OK);
