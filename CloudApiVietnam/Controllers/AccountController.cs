@@ -42,7 +42,7 @@ namespace CloudApiVietnam.Controllers
 
         public ApplicationUserManager UserManager
         {
-            
+
             get
             {
                 return _userManager ?? Request.GetOwinContext().GetUserManager<ApplicationUserManager>();
@@ -56,7 +56,7 @@ namespace CloudApiVietnam.Controllers
         public ISecureDataFormat<AuthenticationTicket> AccessTokenFormat { get; private set; }
 
 
-        [Authorize (Roles ="Admin")]
+        [Authorize(Roles = "Admin")]
         public HttpResponseMessage Get()
         {
             try
@@ -88,11 +88,13 @@ namespace CloudApiVietnam.Controllers
             try
             {
                 User user = db.Users.Where(u => u.Id == id).FirstOrDefault();
-                UserInfo info = new UserInfo();
-                info.Id = user.Id;
-                info.Email = user.Email;
-                info.Roles = user.Roles;
-                info.UserName = user.UserName;
+                UserInfo info = new UserInfo
+                {
+                    Id = user.Id,
+                    Email = user.Email,
+                    Roles = user.Roles,
+                    UserName = user.UserName
+                };
                 return Request.CreateResponse(HttpStatusCode.OK, info);
             }
             catch (Exception ex)
@@ -101,32 +103,7 @@ namespace CloudApiVietnam.Controllers
             }
         }
 
-        // GET api/Account/UserInfo
-        [HostAuthentication(DefaultAuthenticationTypes.ExternalBearer)]
-        [Route("UserInfo")]
-        public UserInfoViewModel GetUserInfo()
-        {
-            ExternalLoginData externalLogin = ExternalLoginData.FromIdentity(User.Identity as ClaimsIdentity);
 
-            string userRole;
-
-            if (User.IsInRole("Admin"))
-            {
-                userRole = "Admin";
-            }
-            else
-            {
-                userRole = "User";
-            }
-
-            return new UserInfoViewModel
-            {
-                Email = User.Identity.GetUserName(),
-                Id = User.Identity.GetUserId(), 
-                Name = User.Identity.Name,
-                UserRole = userRole
-            };
-        }
 
         // POST api/Account/Logout
         [Route("Logout")]
@@ -137,44 +114,44 @@ namespace CloudApiVietnam.Controllers
         }
 
         // GET api/Account/ManageInfo?returnUrl=%2F&generateState=true
-        [Route("ManageInfo")]
-        public async Task<ManageInfoViewModel> GetManageInfo(string returnUrl, bool generateState = false)
-        {
-            IdentityUser user = await UserManager.FindByIdAsync(User.Identity.GetUserId());
+        //[Route("ManageInfo")]
+        //public async Task<ManageInfoViewModel> GetManageInfo(string returnUrl, bool generateState = false)
+        //{
+        //    IdentityUser user = await UserManager.FindByIdAsync(User.Identity.GetUserId());
 
-            if (user == null)
-            {
-                return null;
-            }
+        //    if (user == null)
+        //    {
+        //        return null;
+        //    }
 
-            List<UserLoginInfoViewModel> logins = new List<UserLoginInfoViewModel>();
+        //    List<UserLoginInfoViewModel> logins = new List<UserLoginInfoViewModel>();
 
-            foreach (IdentityUserLogin linkedAccount in user.Logins)
-            {
-                logins.Add(new UserLoginInfoViewModel
-                {
-                    LoginProvider = linkedAccount.LoginProvider,
-                    ProviderKey = linkedAccount.ProviderKey
-                });
-            }
+        //    foreach (IdentityUserLogin linkedAccount in user.Logins)
+        //    {
+        //        logins.Add(new UserLoginInfoViewModel
+        //        {
+        //            LoginProvider = linkedAccount.LoginProvider,
+        //            ProviderKey = linkedAccount.ProviderKey
+        //        });
+        //    }
 
-            if (user.PasswordHash != null)
-            {
-                logins.Add(new UserLoginInfoViewModel
-                {
-                    LoginProvider = LocalLoginProvider,
-                    ProviderKey = user.UserName,
-                });
-            }
+        //    if (user.PasswordHash != null)
+        //    {
+        //        logins.Add(new UserLoginInfoViewModel
+        //        {
+        //            LoginProvider = LocalLoginProvider,
+        //            ProviderKey = user.UserName,
+        //        });
+        //    }
 
-            return new ManageInfoViewModel
-            {
-                LocalLoginProvider = LocalLoginProvider,
-                Email = user.UserName,
-                Logins = logins,
-                ExternalLoginProviders = GetExternalLogins(returnUrl, generateState)
-            };
-        }
+        //    return new ManageInfoViewModel
+        //    {
+        //        LocalLoginProvider = LocalLoginProvider,
+        //        Email = user.UserName,
+        //        Logins = logins,
+        //        ExternalLoginProviders = GetExternalLogins(returnUrl, generateState)
+        //    };
+        //}
 
         // POST api/Account/ChangePassword
         [Route("ChangePassword")]
@@ -187,7 +164,7 @@ namespace CloudApiVietnam.Controllers
 
             IdentityResult result = await UserManager.ChangePasswordAsync(User.Identity.GetUserId(), model.OldPassword,
                 model.NewPassword);
-            
+
             if (!result.Succeeded)
             {
                 return GetErrorResult(result);
@@ -320,9 +297,9 @@ namespace CloudApiVietnam.Controllers
             if (hasRegistered)
             {
                 Authentication.SignOut(DefaultAuthenticationTypes.ExternalCookie);
-                
-                 ClaimsIdentity oAuthIdentity = await user.GenerateUserIdentityAsync(UserManager,
-                    OAuthDefaults.AuthenticationType);
+
+                ClaimsIdentity oAuthIdentity = await user.GenerateUserIdentityAsync(UserManager,
+                   OAuthDefaults.AuthenticationType);
                 ClaimsIdentity cookieIdentity = await user.GenerateUserIdentityAsync(UserManager,
                     CookieAuthenticationDefaults.AuthenticationType);
 
@@ -380,19 +357,16 @@ namespace CloudApiVietnam.Controllers
             return logins;
         }
 
-        // POST api/Account/Register
-      //  [Authorize(Roles = "Admin")]
-      [AllowAnonymous]
-        [Route("Register")]
-        public async Task<IHttpActionResult> Register(RegisterBindingModel model)
+        [AllowAnonymous]
+        public async Task<IHttpActionResult> Post(RegisterBindingModel model)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
-    
-            var user = new User() { UserName = model.Email, Email = model.Email };
-           
+
+            var user = new User() { UserName = model.UserName, Email = model.Email };
+
             IdentityResult result = await UserManager.CreateAsync(user, model.Password);
 
             if (!result.Succeeded)
@@ -402,6 +376,7 @@ namespace CloudApiVietnam.Controllers
             UserManager.AddToRole(user.Id, model.UserRole);
             return Ok();
         }
+
 
         // POST api/Account/RegisterExternal
         [OverrideAuthentication]
@@ -431,7 +406,7 @@ namespace CloudApiVietnam.Controllers
             result = await UserManager.AddLoginAsync(user.Id, info.Login);
             if (!result.Succeeded)
             {
-                return GetErrorResult(result); 
+                return GetErrorResult(result);
             }
             return Ok();
         }
