@@ -54,7 +54,8 @@ namespace CloudApiVietnam.Controllers
                     return Request.CreateErrorResponse(HttpStatusCode.BadRequest, "JSON in 'content' is not corret JSON: " + isJson.Error);
                 }
 
-                var headersCheck = ContentEqeulsHeaders(formContentBindingModel);
+
+                ContentEqeulsHeadersCheck headersCheck = ContentEqeulsHeaders(formContentBindingModel);
                 if (!headersCheck.Status)
                 {
                     return Request.CreateErrorResponse(HttpStatusCode.BadRequest, headersCheck.Error);
@@ -88,6 +89,7 @@ namespace CloudApiVietnam.Controllers
             {
                 formContent.FormulierenId = UpdateObject.FormId;
                 formContent.Content = UpdateObject.Content;
+                db.SaveChanges();
                 return Request.CreateResponse(HttpStatusCode.OK, formContent);
             }
         }
@@ -126,14 +128,12 @@ namespace CloudApiVietnam.Controllers
                 catch (JsonReaderException jex)
                 {
                     //Exception in parsing json
-                    Console.WriteLine(jex.Message);
                     result.Error = jex.Message;
                     result.Status = false;
                     return result;
                 }
                 catch (Exception ex) //some other exception
                 {
-                    Console.WriteLine(ex.ToString());
                     result.Error = ex.ToString();
                     result.Status = false;
                     return result;
