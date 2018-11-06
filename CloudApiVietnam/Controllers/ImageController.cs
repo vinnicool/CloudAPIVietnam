@@ -25,25 +25,27 @@ namespace CloudApiVietnam.Controllers
     public class ImagesController : ApiController
     {
         ApplicationDbContext db = new ApplicationDbContext();
-        // To be set AzureStorage if not, sql database will be used to store images (less than 32gb)
+        // To be set AzureStorage if not, sql database will be used to store images (less than 32gb not advised)
         private string ImageStoragetype = System.Configuration.ConfigurationManager.AppSettings["ImageStoragetype"];
         // GET specifieke Image
         [AllowAnonymous]
         public async Task<HttpResponseMessage> Get(string id)
         {
-            //string reference = "55c6df2c-d258-aa05-b9f96bb11de2.jpeg";
             MemoryStream imageStream = new MemoryStream();
             HttpResponseMessage result;
+
             if (id == "") {
                 result = new HttpResponseMessage(HttpStatusCode.BadRequest);
                 result.Content = new StringContent("Image reference not given");
                 return result;
             }
+
             if (ImageStoragetype == "AzureStorage")
             {
 
                 CloudBlobContainer container = getStorageAccount();
                 CloudBlockBlob blockBlob = container.GetBlockBlobReference(id);
+
                 try
                 {
                     await blockBlob.DownloadToStreamAsync(imageStream);
@@ -157,6 +159,66 @@ namespace CloudApiVietnam.Controllers
 
         }
 
+        // DELETE api/values/5
+        [AllowAnonymous]
+        public async Task<HttpResponseMessage> Delete(string id)
+        {
+            HttpResponseMessage result;
+
+            if (id == "")
+            {
+                result = new HttpResponseMessage(HttpStatusCode.BadRequest);
+                result.Content = new StringContent("Image reference not given");
+                return result;
+            }
+            if (ImageStoragetype == "AzureStorage")
+            {
+                var container = getStorageAccount();
+
+                CloudBlockBlob blockBlob = container.GetBlockBlobReference(id);
+                // Delete the blob.
+                try
+                {
+                    await blockBlob.DeleteAsync();
+                }
+                catch (Exception e)
+                {
+                    if (e.Message.Contains("(404)"))
+                    {
+                        result = new HttpResponseMessage(HttpStatusCode.NotFound);
+                        result.Content = new StringContent("Image not found");
+                        return result;
+                    }
+                    else
+                    {
+                        result = new HttpResponseMessage(HttpStatusCode.InternalServerError);
+                        result.Content = new StringContent(e.Message);
+                        return result;
+                    }
+
+                }
+
+            }
+            else
+            {
+                try
+                {
+                    var image = db.Image.Where(f => f.name == id).FirstOrDefault();
+                    db.Image.Remove(image);
+                    db.SaveChanges();
+                }
+                catch (Exception e)
+                {
+                    result = new HttpResponseMessage(HttpStatusCode.InternalServerError);
+                    result.Content = new StringContent(e.Message);
+                    return result;
+                }
+            }
+
+            result = new HttpResponseMessage(HttpStatusCode.NoContent);
+            return result;
+        }
+
         private HttpResponseMessage CheckIfFileIsToBig(Exception e)
         {
             // Returning a clean file is to big message.
@@ -188,6 +250,13 @@ namespace CloudApiVietnam.Controllers
             // Upload image
             await blob.UploadFromStreamAsync(image);
         }
+        
+        private void SqlStorage(Image image)
+        {
+            db.Image.Add(image);
+            
+            db.SaveChanges();
+        }
 
         private CloudBlobContainer getStorageAccount()
         {
@@ -200,67 +269,6 @@ namespace CloudApiVietnam.Controllers
             var blobClient = storageAccount.CreateCloudBlobClient();
             var container = blobClient.GetContainerReference("patientimages");
             return container;
-        }
-
-        // DELETE api/values/5
-        [AllowAnonymous]
-        public async Task<HttpResponseMessage> Delete(string id)
-        {
-            HttpResponseMessage result;
-
-            if (id  == "") {
-                result = new HttpResponseMessage(HttpStatusCode.BadRequest);
-                result.Content = new StringContent("Image reference not given");
-                return result;
-            }
-            if (ImageStoragetype == "AzureStorage")
-            {
-                var container = getStorageAccount();
-                // Get a reference to a blob named "myblob.txt".
-                
-                CloudBlockBlob blockBlob = container.GetBlockBlobReference(id);
-                // Delete the blob.
-                try {
-                    await blockBlob.DeleteAsync();
-                }
-                catch (Exception e) {
-                    if (e.Message.Contains("(404)")) {
-                        result = new HttpResponseMessage(HttpStatusCode.NotFound);
-                        result.Content = new StringContent("Image not found");
-                        return result;
-                    } else {
-                        result = new HttpResponseMessage(HttpStatusCode.InternalServerError);
-                        result.Content = new StringContent(e.Message);
-                        return result;
-                    }
-                    
-                }
-                
-            }
-            else
-            {
-                try
-                {
-                    var image = db.Image.Where(f => f.name == id).FirstOrDefault();
-                    db.Image.Remove(image);
-                    db.SaveChanges();
-                }
-                catch (Exception e) {
-                    result = new HttpResponseMessage(HttpStatusCode.InternalServerError);
-                    result.Content = new StringContent(e.Message);
-                    return result;
-                }
-            }
-
-            result = new HttpResponseMessage(HttpStatusCode.NoContent);
-            return result;
-        }
-
-        private void SqlStorage(Image image)
-        {
-            db.Image.Add(image);
-            
-            db.SaveChanges();
         }
 
         private byte[] ConvertStreamToBytes(Stream input)

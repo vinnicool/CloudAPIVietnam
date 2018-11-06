@@ -49,10 +49,8 @@ namespace CloudApiVietnam.Models
             modelBuilder.Entity<User>().ToTable("Users").Ignore(p => p.LockoutEnabled);
             modelBuilder.Entity<User>().ToTable("Users").Ignore(p => p.LockoutEndDateUtc);
             modelBuilder.Entity<User>().ToTable("Users").Ignore(p => p.AccessFailedCount);
-           // modelBuilder.Ignore<IdentityUserLogin>();
-
-
-            //   modelBuilder.Ignore<IdentityUserClaim>();
+            
+          
 
 
 
