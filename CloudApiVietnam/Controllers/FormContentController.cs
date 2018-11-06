@@ -51,7 +51,7 @@ namespace CloudApiVietnam.Controllers
                 IsJSON isJson = IsValidJson(formContentBindingModel.Content); // Check of JSON klopt en maak resultaat object
                 if (!isJson.Status) // als resultaat object status fals is return error
                 {
-                    return Request.CreateErrorResponse(HttpStatusCode.BadRequest, "JSON in 'content' is not corret JSON: " + isJson.Error);
+                    return Request.CreateErrorResponse(HttpStatusCode.BadRequest, "JSON in 'content' is not correct JSON: " + isJson.Error);
                 }
 
 
