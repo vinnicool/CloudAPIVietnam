@@ -63,7 +63,7 @@ namespace CloudApiVietnam.Tests.Controllers
             // Arramge
 
             // Act
-            HttpResponseMessage actionResult =  await controller.Get("c3887efa-1dda-4f2a-9e82-030ef2d9c11b");
+            HttpResponseMessage actionResult =  await controller.Get("7c7beaab-5e14-434f-b184-bd580e706c4a");
             
             // Assert
             Assert.AreEqual(actionResult.StatusCode, HttpStatusCode.OK);
@@ -88,7 +88,7 @@ namespace CloudApiVietnam.Tests.Controllers
             // Arramge
 
             // Act
-            HttpResponseMessage actionResult = await controller.Delete("e86d9809-da2d-4958-9b59-a94dc212611f");
+            HttpResponseMessage actionResult = await controller.Delete("7c7beaab-5e14-434f-b184-bd580e706c4a");
 
             // Assert
             Assert.AreEqual(actionResult.StatusCode, HttpStatusCode.NoContent);
