@@ -87,7 +87,14 @@ namespace CloudApiVietnam.Controllers
         {
             try
             {
-                User user = db.Users.Where(u => u.Id == id).FirstOrDefault();
+                User user = new User();
+                try
+                {
+                    user = db.Users.Where(u => u.Id == id).FirstOrDefault();
+                } catch (Exception ex )
+                {
+                    return Request.CreateErrorResponse(HttpStatusCode.NotFound, ex);
+                }
                 UserInfo info = new UserInfo
                 {
                     Id = user.Id,
