@@ -60,11 +60,13 @@ namespace CloudApiVietnam.Controllers
         {
             try
             {
+                //Haal de users op uit de database
                 List<UserInfo> usersInfo = new List<UserInfo>();
                 List<User> users = db.Users.ToList();
                 if(users == null)
                     return Request.CreateErrorResponse(HttpStatusCode.NoContent, "There are no users in the database.");
-
+                
+                //Zet alle users van de database om naar users die getoond kunnen worden.
                 foreach (User user in users)
                 {
                     UserInfo info = new UserInfo
@@ -89,11 +91,13 @@ namespace CloudApiVietnam.Controllers
         {
             try
             {
+                //Haal de user uit de database op
                 User user = db.Users.Where(u => u.Id == id).FirstOrDefault();
 
                 if(user == null)
                     return Request.CreateErrorResponse(HttpStatusCode.NotFound, "No user found with id: " + id);
 
+                //Zet de user uit de database om naar een user die getoond moet worden
                 UserInfo info = new UserInfo
                 {
                     Id = user.Id,
@@ -116,6 +120,7 @@ namespace CloudApiVietnam.Controllers
         {
             try
             {
+                //Check of het meegestuurde model valide is, stuur anders een custom message mee
                 if (!ModelState.IsValid)
                     return Request.CreateErrorResponse(HttpStatusCode.BadRequest, ModelState);
 
@@ -158,12 +163,14 @@ namespace CloudApiVietnam.Controllers
         [AllowAnonymous]
         public HttpResponseMessage Delete(string id)
         {
+            //Haal de user op
             User user = db.Users.Where(f => f.Id == id).FirstOrDefault();
 
             if (user == null)
                 return Request.CreateErrorResponse(HttpStatusCode.NotFound, "No FormContent found with id: " + id.ToString());
             else
             {
+                //Probeer de user te verwijderen
                 try
                 {
                     db.Users.Remove(user);
@@ -181,27 +188,33 @@ namespace CloudApiVietnam.Controllers
         [AllowAnonymous]
         public HttpResponseMessage Put(string id, [FromBody]RegisterBindingModel model)
         {
+            //User en role opvragen.
             User user = db.Users.Where(f => f.Id == id).FirstOrDefault();
             IdentityRole role = db.Roles.Where(r => r.Name == model.UserRole).FirstOrDefault();
             
-            if (user == null)
+            
+            if (user == null) //Checken of er een user is gevonden met het id
                 return Request.CreateErrorResponse(HttpStatusCode.NotFound, "No user found with id: " + id.ToString());
             else
             {
                 try
                 {
-                    if (role == null)
+                    if (role == null) //Checken of er roles zijn gevonden bij de user
                         throw new System.ArgumentException("There is no userrole named: " + role.Name);
                     else
                     {
+                        //Vervang de usre role als deze anders is
                         if (user.Roles.FirstOrDefault().RoleId != role.Id)
                         {
                             UserManager.RemoveFromRole(user.Id, role.Name);
                             UserManager.AddToRole(user.Id, model.UserRole);
                         }
+
+                        //Vervang de user Email
                         user.Email = model.Email;
                     }
-                 
+
+                    //Sla de changes op
                     db.SaveChanges();
                     return Request.CreateResponse(HttpStatusCode.OK, user);
                 }
