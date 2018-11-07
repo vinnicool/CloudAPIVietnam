@@ -24,6 +24,7 @@ namespace CloudApiVietnam.Tests.Controllers
         };
 
 
+
         [TestMethod]
         [TestInitialize()]
         public void Post_Succes()
@@ -85,6 +86,17 @@ namespace CloudApiVietnam.Tests.Controllers
             // Assert
             Assert.AreEqual(result.StatusCode, HttpStatusCode.OK);
             Assert.IsNotNull(resultContent);
+        }
+
+        [TestMethod]
+        public void GetById_Fail()
+        {
+            // Act
+            HttpResponseMessage result = controller.Get(-99999);
+            var resultContent = result.Content.ReadAsAsync<System.Web.Http.HttpError>().Result;
+            // Assert
+            Assert.AreEqual(result.StatusCode, HttpStatusCode.NotFound);
+            Assert.AreEqual(resultContent.Message, "No FormContent found with id: -99999");
         }
 
         [TestMethod]
