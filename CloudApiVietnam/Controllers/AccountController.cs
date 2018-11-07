@@ -54,6 +54,21 @@ namespace CloudApiVietnam.Controllers
 
         public ISecureDataFormat<AuthenticationTicket> AccessTokenFormat { get; private set; }
 
+        // POST api/Account/ChangePassword
+        [Route("ChangePassword")]
+        public HttpResponseMessage ChangePassword(ChangePasswordBindingModel model)
+        {
+            if (!ModelState.IsValid)
+                return Request.CreateErrorResponse(HttpStatusCode.BadRequest, ModelState);
+
+            IdentityResult result = UserManager.ChangePassword(User.Identity.GetUserId(), model.OldPassword, model.NewPassword);
+
+            if (!result.Succeeded)
+                return Request.CreateErrorResponse(HttpStatusCode.InternalServerError, "The user's password could not be changed.");
+            
+            return Request.CreateResponse(HttpStatusCode.OK);
+        }
+
         //GET /api/Account
         [Authorize(Roles = "Admin")]
         public HttpResponseMessage Get()
@@ -226,29 +241,6 @@ namespace CloudApiVietnam.Controllers
         }
 
         #region Helpers
-
-
-
-
-        // POST api/Account/ChangePassword
-        [Route("ChangePassword")]
-        public async Task<IHttpActionResult> ChangePassword(ChangePasswordBindingModel model)
-        {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            IdentityResult result = await UserManager.ChangePasswordAsync(User.Identity.GetUserId(), model.OldPassword,
-                model.NewPassword);
-
-            if (!result.Succeeded)
-            {
-                return GetErrorResult(result);
-            }
-
-            return Ok();
-        }
 
         private IHttpActionResult GetErrorResult(IdentityResult result)
         {
