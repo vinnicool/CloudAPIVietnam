@@ -74,53 +74,56 @@ namespace CloudApiVietnam.Controllers
         // PUT api/values/5
         public HttpResponseMessage Put(int id, [FromBody]FormulierenBindingModel UpdateObject)
         {
-            var form = db.Formulieren.Where(f => f.Id == id).FirstOrDefault();
-
-            if (form == null)
+            try
             {
-                return Request.CreateErrorResponse(HttpStatusCode.NotFound, "No form found with id: " + id.ToString());
-            }
+                var form = db.Formulieren.Where(f => f.Id == id).FirstOrDefault();
 
-            var formContentList = db.FormContent.Where(s => s.FormulierenId == id).ToList(); //get all the formContents related to the form
+                if (form == null)
+                    return Request.CreateErrorResponse(HttpStatusCode.NotFound, "No form found with id: " + id.ToString());
 
-            List<JArray> formContentArray = new List<JArray>();
+                if (form.FormTemplate == UpdateObject.FormTemplate) //check if tmeplate is changed
+                    return Request.CreateErrorResponse(HttpStatusCode.BadRequest, "The template hasn't been changed. Please submit a changed template.");
 
-            foreach (var formContent in formContentList)
-            {
-                formContentArray.Add(JArray.Parse(formContent.Content)); //parse db data to JSON list
-            }
+                var formContentList = db.FormContent.Where(s => s.FormulierenId == id).ToList(); //get all the formContents related to the form
 
-            form.Name = UpdateObject.Name;
-            form.Region = UpdateObject.Region;
-            form.FormTemplate = UpdateObject.FormTemplate;
+                List<JArray> formContentArray = new List<JArray>();
 
-            IsJSON isJson = IsValidJson(form.FormTemplate);
+                foreach (var formContent in formContentList)
+                    formContentArray.Add(JArray.Parse(formContent.Content)); //parse db data to JSON list
 
-            if (!isJson.Status) // Check if new formTemplate is correct JSON
-            {
-                return Request.CreateErrorResponse(HttpStatusCode.BadRequest, "JSON in 'template' is not correct JSON: " + isJson.Error);
-            }
+                form.Name = UpdateObject.Name;
+                form.Region = UpdateObject.Region;
+                form.FormTemplate = UpdateObject.FormTemplate;
 
-            var formTemplate = JArray.Parse(form.FormTemplate); //parse new template to JSON
+                IsJSON isJson = IsValidJson(form.FormTemplate);
 
-            if (formTemplate.Count - formContentArray.FirstOrDefault().Count > 1 || formTemplate.Count - formContentArray.FirstOrDefault().Count < -1)
-            {
-                return Request.CreateErrorResponse(HttpStatusCode.BadRequest, "Only 1 key can be added/removed/edited at a time");
-            }
+                if (!isJson.Status) // Check if new formTemplate is correct JSON
+                    return Request.CreateErrorResponse(HttpStatusCode.BadRequest, "JSON in 'template' is not correct JSON: " + isJson.Error);
 
-            UpdateFormContent(formContentArray, formTemplate);
+                var formTemplate = JArray.Parse(form.FormTemplate); //parse new template to JSON
 
-            foreach (var content in formContentList)
-            {
-                foreach (var newContent in formContentArray)
+                if (formTemplate.Count - formContentArray.FirstOrDefault().Count > 1 || formTemplate.Count - formContentArray.FirstOrDefault().Count < -1)
+                    return Request.CreateErrorResponse(HttpStatusCode.BadRequest, "Only 1 key can be added/removed/edited at a time");
+
+                UpdateFormContent(formContentArray, formTemplate);
+
+                foreach (var content in formContentList)
                 {
-                    content.Content = newContent.ToString();
-                    db.Entry(content).State = EntityState.Modified;
-                    db.SaveChanges();
+                    foreach (var newContent in formContentArray)
+                    {
+                        content.Content = newContent.ToString();
+                        db.Entry(content).State = EntityState.Modified;
+                        db.SaveChanges();
+                    }
                 }
+
+                return Request.CreateResponse(HttpStatusCode.OK, form);
+            }
+            catch (Exception ex)
+            {
+                return Request.CreateErrorResponse(HttpStatusCode.InternalServerError, ex); ;
             }
 
-            return Request.CreateResponse(HttpStatusCode.OK, form);
         }
 
         public HttpResponseMessage Delete(int id)
@@ -200,18 +203,15 @@ namespace CloudApiVietnam.Controllers
                         if (formContentProperty.First().Name != formTemplateProperty.First().Name && !changed && !unchangedTokens.Contains(formContentProperty.First().Name) && !unchangedTokens.Contains(formTemplateProperty.First().Name))
                         {
                             if (formContent.Count == formTemplate.Count) //check if a token is being edited, added or removed
-                            {
                                 formContentToken[formTemplateProperty.First().Name] = formContentProperty.First().Value;
                                 formContentToken.Remove(formContentProperty.First().Name);
-                            }
+
                             if (formContent.Count < formTemplate.Count) //more headers than tokens
-                            {
                                 formContent.Add(formTemplateToken);
-                            }
+
                             if (formContent.Count > formTemplate.Count) //more tokens than headers
-                            {
                                 formContentToken.Remove();
-                            }
+
                             changed = true;
                         }
                         else if (formContentProperty.First().Name == formTemplateProperty.First().Name) //if a token is unchanged, put it in this list
