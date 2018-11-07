@@ -147,7 +147,7 @@ namespace CloudApiVietnam.Tests.Controllers
             FormulierenController controller = GetController();
             Random rnd = new Random();
 
-            formBindingModel.FormTemplate = "[{'Naam':'testnaam'},{'Leeftijd':'22'},{'NewField':'string'}]";
+            formBindingModel.FormTemplate = "[{'Naam':'testnaam'},{'Leeftijd':'22'},{'Afwijking':'string'}]";
             formBindingModel.Region = "test";
             formBindingModel.Name = "name";
 
