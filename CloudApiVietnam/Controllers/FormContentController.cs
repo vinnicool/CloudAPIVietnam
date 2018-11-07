@@ -70,7 +70,8 @@ namespace CloudApiVietnam.Controllers
 
                 db.FormContent.Add(formContent);
                 db.SaveChanges();
-                return Request.CreateResponse(HttpStatusCode.OK);
+
+                return Request.CreateResponse(HttpStatusCode.OK, formContent);
             }
             catch (Exception ex)
             {
@@ -89,10 +90,24 @@ namespace CloudApiVietnam.Controllers
             }
             else
             {
+                formContent.FormulierenId = UpdateObject.FormId;
+
+                IsJSON isJson = IsValidJson(UpdateObject.Content); // Check of JSON klopt en maak resultaat object
+                if (!isJson.Status) // als resultaat object status fals is return error
+                {
+                    return Request.CreateErrorResponse(HttpStatusCode.BadRequest, "JSON in 'content' is not correct JSON: " + isJson.Error);
+                }
+
+
+                ContentEqeulsHeadersCheck headersCheck = ContentEqeulsHeaders(UpdateObject);
+                if (!headersCheck.Status)
+                {
+                    return Request.CreateErrorResponse(HttpStatusCode.BadRequest, headersCheck.Error);
+                }
+
+                formContent.Content = UpdateObject.Content;
                 try
                 {
-                    formContent.FormulierenId = UpdateObject.FormId;
-                    formContent.Content = UpdateObject.Content;
                     db.SaveChanges();
                     return Request.CreateResponse(HttpStatusCode.OK, formContent);
                 }
