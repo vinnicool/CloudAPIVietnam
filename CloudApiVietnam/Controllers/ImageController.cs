@@ -27,22 +27,17 @@ namespace CloudApiVietnam.Controllers
         ApplicationDbContext db = new ApplicationDbContext();
         // To be set AzureStorage if not, sql database will be used to store images (less than 32gb not advised)
         private string ImageStoragetype = System.Configuration.ConfigurationManager.AppSettings["ImageStoragetype"];
-        // GET specifieke Image
-        [AllowAnonymous]
+        // GET specific Image
         public async Task<HttpResponseMessage> Get(string id)
         {
             MemoryStream imageStream = new MemoryStream();
             HttpResponseMessage result;
 
-            if (id == "") {
-                result = new HttpResponseMessage(HttpStatusCode.BadRequest);
-                result.Content = new StringContent("Image reference not given");
-                return result;
-            }
+            if (id == "")
+                return IdIsNullResponse(out result);
 
             if (ImageStoragetype == "AzureStorage")
             {
-
                 CloudBlobContainer container = getStorageAccount();
                 CloudBlockBlob blockBlob = container.GetBlockBlobReference(id);
 
@@ -50,31 +45,43 @@ namespace CloudApiVietnam.Controllers
                 {
                     await blockBlob.DownloadToStreamAsync(imageStream);
                     imageStream.Position = 0;
-                    if (imageStream == null) {
+                    if (imageStream == null)
+                    {
                         result = new HttpResponseMessage(HttpStatusCode.InternalServerError);
                         result.Content = new StringContent("Requested image could not be downloaded..");
                         return result;
                     }
                 }
-                catch(Exception e)
+                catch (Exception e)
                 {
-                    if (e.Message.Contains("(404)")) {
+                    if (e.Message.Contains("(404)"))
+                    {
                         result = new HttpResponseMessage(HttpStatusCode.NotFound);
                         result.Content = new StringContent("Image not found");
                         return result;
-                    } else {
+                    }
+                    else
+                    {
                         result = new HttpResponseMessage(HttpStatusCode.InternalServerError);
                         result.Content = new StringContent(e.Message);
                         return result;
                     }
-                    
+
                 }
             }
             else
-            {   
-                //try catch?
-                Image image = db.Image.Where(f => f.name == id).FirstOrDefault();
-                imageStream = new MemoryStream(image.image);
+            {
+                try
+                {
+                    Image image = db.Image.Where(f => f.name == id).FirstOrDefault();
+                    imageStream = new MemoryStream(image.image);
+                }
+                catch (Exception e)
+                {
+                    result = new HttpResponseMessage(HttpStatusCode.InternalServerError);
+                    result.Content = new StringContent(e.Message);
+                    return result;
+                }
             }
 
             result = new HttpResponseMessage(HttpStatusCode.OK);
@@ -82,15 +89,15 @@ namespace CloudApiVietnam.Controllers
             result.Content.Headers.ContentType = new MediaTypeHeaderValue("image/jpeg");
             return result;
         }
-        // POST een Image
-        [AllowAnonymous]
+
+        // POST
         public async Task<HttpResponseMessage> Post()
         {
             HttpResponseMessage result;
+
             if (!Request.Content.IsMimeMultipartContent())
-            {
                 throw new HttpResponseException(HttpStatusCode.UnsupportedMediaType);
-            }
+
             var provider = new MultipartMemoryStreamProvider();
 
             try
@@ -99,14 +106,18 @@ namespace CloudApiVietnam.Controllers
             }
             catch (Exception e)
             {
-                if (provider.Contents.Count == 0) {
+                if (provider.Contents.Count == 0)
+                {
                     return result = Request.CreateResponse(HttpStatusCode.BadRequest, "Uploaded file was not received, missing image or wrong content-type header");
-                } else {
+                }
+                else
+                {
                     return CheckIfFileIsToBig(e);
                 }
-                
             }
+
             List<Image> imageList = new List<Image>();
+
             foreach (var file in provider.Contents)
             {
                 var filename = file.Headers.ContentDisposition.FileName.Trim('\"');
@@ -115,12 +126,11 @@ namespace CloudApiVietnam.Controllers
                 var types = new List<string> { "jpeg", "jpg", "png" };
                 bool contains = types.Contains(imageType, StringComparer.OrdinalIgnoreCase);
                 if (!contains)
-                {
                     return result = Request.CreateResponse(HttpStatusCode.BadRequest, "Types of Digital Image should be: jpeg, jpg or png");
-                }
+
                 Stream imageStream = await file.ReadAsStreamAsync();
-                // Creates a unique value
                 var blobNameReference = $"{Guid.NewGuid().ToString()}";
+
                 if (ImageStoragetype == "AzureStorage")
                 {
                     try
@@ -134,7 +144,6 @@ namespace CloudApiVietnam.Controllers
                     {
                         return result = Request.CreateResponse(HttpStatusCode.InternalServerError, e.Message);
                     }
-
                 }
                 else
                 {
@@ -146,7 +155,6 @@ namespace CloudApiVietnam.Controllers
                         SqlStorage(image);
                         image.image = null;
                         imageList.Add(image);
-
                     }
                     catch (Exception e)
                     {
@@ -159,18 +167,14 @@ namespace CloudApiVietnam.Controllers
 
         }
 
-        // DELETE api/values/5
-        [AllowAnonymous]
+        // DELETE specific image
         public async Task<HttpResponseMessage> Delete(string id)
         {
             HttpResponseMessage result;
 
             if (id == "")
-            {
-                result = new HttpResponseMessage(HttpStatusCode.BadRequest);
-                result.Content = new StringContent("Image reference not given");
-                return result;
-            }
+                return IdIsNullResponse(out result);
+
             if (ImageStoragetype == "AzureStorage")
             {
                 var container = getStorageAccount();
@@ -223,24 +227,23 @@ namespace CloudApiVietnam.Controllers
         {
             // Returning a clean file is to big message.
             List<string> errors = new List<string> { "De maximale aanvraaglengte is overschreden.", "Maximum request length exceeded.", "Độ dài yêu cầu tối đa đã bị vượt quá" };
-            bool contains = errors.Contains(e.InnerException.Message, StringComparer.OrdinalIgnoreCase);
             HttpResponseMessage result;
-            if (contains)
+            if (errors.Contains(e.InnerException.Message, StringComparer.OrdinalIgnoreCase))
             {
-                
                 result = new HttpResponseMessage(HttpStatusCode.RequestEntityTooLarge);
                 result.Content = new StringContent("Image size should be smaller than 5,0 MBytes");
                 return result;
             }
             else
             {
-                throw new HttpResponseException(HttpStatusCode.InternalServerError);
+                result = new HttpResponseMessage(HttpStatusCode.InternalServerError);
+                result.Content = new StringContent(e.Message);
+                return result;
             }
         }
 
         private async Task AzureStorageAsync(Stream image, string reference)
         {
-
             var container = getStorageAccount();
             await container.CreateIfNotExistsAsync();
             await container.SetPermissionsAsync(new BlobContainerPermissions { PublicAccess = BlobContainerPublicAccessType.Blob });
@@ -250,11 +253,10 @@ namespace CloudApiVietnam.Controllers
             // Upload image
             await blob.UploadFromStreamAsync(image);
         }
-        
+
         private void SqlStorage(Image image)
         {
             db.Image.Add(image);
-            
             db.SaveChanges();
         }
 
@@ -283,6 +285,12 @@ namespace CloudApiVietnam.Controllers
                 }
                 return ms.ToArray();
             }
+        }
+        private HttpResponseMessage IdIsNullResponse(out HttpResponseMessage result)
+        {
+            result = new HttpResponseMessage(HttpStatusCode.BadRequest);
+            result.Content = new StringContent("Image reference not given");
+            return result;
         }
     }
 }
