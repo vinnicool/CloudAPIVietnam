@@ -7,6 +7,7 @@ using CloudApiVietnam.Models;
 using System.Net.Http;
 using System.Net;
 using System.Web.Http;
+using System.Linq;
 
 namespace CloudApiVietnam.Tests.Controllers
 {
@@ -31,7 +32,7 @@ namespace CloudApiVietnam.Tests.Controllers
             // Assert
             List<Formulieren> formulier;
             Assert.IsTrue(actionResult.TryGetContentValue<List<Formulieren>>(out formulier));
-            this.id = formulier[0].Id;
+            this.id = formulier.FirstOrDefault().Id;
             Assert.AreEqual(actionResult.StatusCode, HttpStatusCode.OK);
         }
 
