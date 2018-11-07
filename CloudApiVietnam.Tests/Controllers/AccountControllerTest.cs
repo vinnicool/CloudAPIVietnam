@@ -23,10 +23,10 @@ namespace CloudApiVietnam.Tests.Controllers
 
         };
 
-    
 
 
-        private RegisterBindingModel createModel(string Email, string Password, string ConfirmPassword, string UserRole) 
+
+        private RegisterBindingModel createModel(string Email, string Password, string ConfirmPassword, string UserRole)
         {
             RegisterBindingModel model = new RegisterBindingModel();
             model.Email = Email;
@@ -51,7 +51,7 @@ namespace CloudApiVietnam.Tests.Controllers
             Assert.AreEqual(response.StatusCode, HttpStatusCode.OK);
         }
 
-        [TestMethod] 
+        [TestMethod]
         public void GetById_Ok()
         {
             //Act
@@ -87,6 +87,7 @@ namespace CloudApiVietnam.Tests.Controllers
             User user;
             Assert.IsTrue(response.TryGetContentValue<User>(out user));
             id = user.Id;
+
         }
 
         [TestMethod]
