@@ -110,6 +110,7 @@ namespace CloudApiVietnam.Controllers
         }
                
         //POST /api/Account
+        //Voor nu even AllowAnonymous voor het eenvoudig testen
         [AllowAnonymous]
         public HttpResponseMessage Post(RegisterBindingModel model)
         {
