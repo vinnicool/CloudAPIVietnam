@@ -147,6 +147,7 @@ namespace CloudApiVietnam.Controllers
             {
                 return GetErrorResult(result);
             }
+
             UserManager.AddToRole(user.Id, model.UserRole);
             return Ok();
         }

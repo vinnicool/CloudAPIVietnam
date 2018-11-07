@@ -9,6 +9,7 @@ using System.Net;
 using System.Web.Http;
 using System.Threading.Tasks;
 using System.IO;
+using System.Web.Http.Results;
 
 namespace CloudApiVietnam.Tests.Controllers
 {
@@ -65,7 +66,52 @@ namespace CloudApiVietnam.Tests.Controllers
             Task<IHttpActionResult> response = controller.Post(model);
 
             //Assert
+            //TODO Nog kijken of response.Status gelijk is aan Ok()
             Assert.AreEqual(response.Status, Ok());
+        }
+
+        [TestMethod]
+        public void Post_Faulted_Password()
+        {
+            RegisterBindingModel model = new RegisterBindingModel();
+            model.Email = Path.GetRandomFileName().Replace(".", "").Substring(0, 8) + "@ivobot.nl";
+            model.Password = "Welkom123!";
+            model.ConfirmPassword = "NietGelijkAanAndere";
+            model.UserRole = "Admin";
+
+            //Act
+            Task<IHttpActionResult> response = controller.Post(model);
+
+
+            //Assert
+            Assert.AreEqual(response.Status, TaskStatus.Faulted);
+        }
+
+        [TestMethod]
+        public void Post_Faulted_Role()
+        {
+            RegisterBindingModel model = new RegisterBindingModel();
+            model.Email = Path.GetRandomFileName().Replace(".", "").Substring(0, 8) + "@ivobot.nl";
+            model.Password = "Welkom123!";
+            model.ConfirmPassword = "Welkom123!";
+            model.UserRole = "GeenRole";
+
+            //Act
+            Task<IHttpActionResult> response = controller.Post(model);
+
+            //Assert
+            Assert.AreEqual(response.Status, TaskStatus.Faulted);
+        }
+
+        [TestMethod]
+        public void Delete()
+        {
+            //Act
+            //TODO Wijzigen naar correcte ID die altijd bestaat
+            HttpResponseMessage response = controller.Delete("1");
+
+            //Assert
+            Assert.AreEqual(response.StatusCode, HttpStatusCode.OK);
         }
 
         private TaskStatus Ok()
