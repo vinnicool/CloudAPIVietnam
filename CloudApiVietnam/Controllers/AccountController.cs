@@ -61,8 +61,7 @@ namespace CloudApiVietnam.Controllers
             try
             {
                 List<UserInfo> usersInfo = new List<UserInfo>();
-                List<User> users = new List<User>();
-                users = db.Users.ToList();
+                List<User> users = db.Users.ToList();
                 if(users == null)
                     return Request.CreateErrorResponse(HttpStatusCode.NoContent, "There are no users in the database.");
 
@@ -90,8 +89,7 @@ namespace CloudApiVietnam.Controllers
         {
             try
             {
-                User user = new User();
-                user = db.Users.Where(u => u.Id == id).FirstOrDefault();
+                User user = db.Users.Where(u => u.Id == id).FirstOrDefault();
 
                 if(user == null)
                     return Request.CreateErrorResponse(HttpStatusCode.NotFound, "No user found with id: " + id);
@@ -159,16 +157,15 @@ namespace CloudApiVietnam.Controllers
         [AllowAnonymous]
         public HttpResponseMessage Delete(string id)
         {
-            var User = new User();
-            User = db.Users.Where(f => f.Id == id).FirstOrDefault();
+            User user = db.Users.Where(f => f.Id == id).FirstOrDefault();
 
-            if (User == null)
+            if (user == null)
                 return Request.CreateErrorResponse(HttpStatusCode.NotFound, "No FormContent found with id: " + id.ToString());
             else
             {
                 try
                 {
-                    db.Users.Remove(User);
+                    db.Users.Remove(user);
                     db.SaveChanges();
                     return Request.CreateResponse(HttpStatusCode.OK);
                 }
@@ -183,10 +180,8 @@ namespace CloudApiVietnam.Controllers
         [AllowAnonymous]
         public HttpResponseMessage Put(string id, [FromBody]RegisterBindingModel model)
         {
-            User user = new User();
-            IdentityRole role = new IdentityRole();
-            user = db.Users.Where(f => f.Id == id).FirstOrDefault();
-            role = db.Roles.Where(r => r.Name == model.UserRole).FirstOrDefault();
+            User user = db.Users.Where(f => f.Id == id).FirstOrDefault();
+            IdentityRole role = db.Roles.Where(r => r.Name == model.UserRole).FirstOrDefault();
             
             if (user == null)
                 return Request.CreateErrorResponse(HttpStatusCode.NotFound, "No user found with id: " + id.ToString());
