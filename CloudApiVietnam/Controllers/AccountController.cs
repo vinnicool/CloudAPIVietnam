@@ -87,7 +87,9 @@ namespace CloudApiVietnam.Controllers
         {
             try
             {
-                User user = db.Users.Where(u => u.Id == id).FirstOrDefault();
+                User user = new User();
+                user = db.Users.Where(u => u.Id == id).FirstOrDefault();
+
                 UserInfo info = new UserInfo
                 {
                     Id = user.Id,
@@ -142,7 +144,15 @@ namespace CloudApiVietnam.Controllers
 
                 return Request.CreateErrorResponse(HttpStatusCode.NotFound, result.Errors.ToString());
             }
-            UserManager.AddToRole(user.Id, model.UserRole);
+
+            try
+            {
+                UserManager.AddToRole(user.Id, model.UserRole);
+            } catch (Exception ex)
+            {
+                return Request.CreateErrorResponse(HttpStatusCode.Conflict, ex);
+            }
+
             return Request.CreateResponse(HttpStatusCode.OK, user);
         }
 
@@ -152,7 +162,14 @@ namespace CloudApiVietnam.Controllers
         [AllowAnonymous]
         public HttpResponseMessage Delete(string id)
         {
-            var User = db.Users.Where(f => f.Id == id).FirstOrDefault();
+            var User = new User();
+            try
+            {
+                User = db.Users.Where(f => f.Id == id).FirstOrDefault();
+            } catch (Exception ex)
+            {
+                return Request.CreateErrorResponse(HttpStatusCode.Conflict, ex);
+            }
 
             if (User == null)
             {
@@ -177,8 +194,17 @@ namespace CloudApiVietnam.Controllers
         [AllowAnonymous]
         public HttpResponseMessage Put(string id, [FromBody]RegisterBindingModel model)
         {
-            User user = db.Users.Where(f => f.Id == id).FirstOrDefault();
-            var role = db.Roles.Where(r => r.Name == model.UserRole).FirstOrDefault();
+            User user = new User();
+            IdentityRole role = new IdentityRole();
+
+            try
+            {
+                user = db.Users.Where(f => f.Id == id).FirstOrDefault();
+                role = db.Roles.Where(r => r.Name == model.UserRole).FirstOrDefault();
+            } catch (Exception ex)
+            {
+                return Request.CreateErrorResponse(HttpStatusCode.Conflict, ex);
+            }
             
             if (user == null)
             {
