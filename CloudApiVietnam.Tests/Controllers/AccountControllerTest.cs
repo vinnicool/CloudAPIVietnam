@@ -19,15 +19,36 @@ namespace CloudApiVietnam.Tests.Controllers
     [TestClass]
     public class AccountControllerTest
     {
-        // Arrange
-        AccountController controller = new AccountController();
-        string testUserId;
+        //Arrange
+        private AccountController GetController()
+        {
+            return new AccountController
+            {
+                Request = new System.Net.Http.HttpRequestMessage(),
+                Configuration = new HttpConfiguration()
+            };
+        }
+
+        private RegisterBindingModel createModel(string Email, string Password, string ConfirmPassword, string UserRole) 
+        {
+            RegisterBindingModel model = new RegisterBindingModel();
+            model.Email = Email;
+            model.Password = Password;
+            model.ConfirmPassword = ConfirmPassword;
+            model.UserRole = UserRole;
+            return model;
+        }
+
+        private string GetRandomEmail()
+        {
+            return Path.GetRandomFileName().Replace(".", "").Substring(0, 8) + "@ivobot.nl";
+        }
 
         [TestMethod]
         public void Get_Ok()
         {
             // Act
-            HttpResponseMessage response = controller.Get();
+            HttpResponseMessage response = GetController().Get();
 
             // Assert
             Assert.AreEqual(response.StatusCode, HttpStatusCode.OK);
@@ -37,17 +58,18 @@ namespace CloudApiVietnam.Tests.Controllers
         public void GetById_Ok()
         {
             //Act
-            HttpResponseMessage response = controller.Get(testUserId);
+            //TODO ID aanpassen aan ID die in de db staat...
+            HttpResponseMessage response = GetController().Get("1");
 
             //Assert
-            Assert.AreEqual(response.StatusCode, HttpStatusCode.BadRequest);
+            Assert.AreEqual(response.StatusCode, HttpStatusCode.OK);
         }
 
         [TestMethod]
         public void GetById_NotFound()
         {
             //Act
-            HttpResponseMessage response = controller.Get("999999");
+            HttpResponseMessage response = GetController().Get("999999");
 
             //Assert
             Assert.AreEqual(response.StatusCode, HttpStatusCode.NotFound);
@@ -56,122 +78,131 @@ namespace CloudApiVietnam.Tests.Controllers
         [TestMethod]
         public void Post_Ok()
         {
-            RegisterBindingModel model = new RegisterBindingModel();
-            model.Email = Path.GetRandomFileName().Replace(".", "").Substring(0, 8) + "@ivobot.nl";
-            model.Password = "Welkom123!";
-            model.ConfirmPassword = "Welkom123!";
-            model.UserRole = "Admin";
+            string Email = GetRandomEmail();
+            RegisterBindingModel model = createModel(Email, "Welkom123!", "Welkom123!", "Admin");
 
             //Act
-            Task<IHttpActionResult> response = controller.Post(model);
-
-            //Assert
-            //TODO Nog kijken of response.Status gelijk is aan Ok()
-            Assert.AreEqual(response.Status, Ok());
-        }
-
-        [TestMethod]
-        public void Post_Faulted_Password()
-        {
-            RegisterBindingModel model = new RegisterBindingModel();
-            model.Email = Path.GetRandomFileName().Replace(".", "").Substring(0, 8) + "@ivobot.nl";
-            model.Password = "Welkom123!";
-            model.ConfirmPassword = "NietGelijkAanAndere";
-            model.UserRole = "Admin";
-
-            //Act
-            Task<IHttpActionResult> response = controller.Post(model);
-
-
-            //Assert
-            Assert.AreEqual(response.Status, TaskStatus.Faulted);
-        }
-
-        [TestMethod]
-        public void Post_Faulted_Role()
-        {
-            RegisterBindingModel model = new RegisterBindingModel();
-            model.Email = Path.GetRandomFileName().Replace(".", "").Substring(0, 8) + "@ivobot.nl";
-            model.Password = "Welkom123!";
-            model.ConfirmPassword = "Welkom123!";
-            model.UserRole = "GeenRole";
-
-            //Act
-            Task<IHttpActionResult> response = controller.Post(model);
-
-            //Assert
-            Assert.AreEqual(response.Status, TaskStatus.Faulted);
-        }
-
-        [TestMethod]
-        public void Delete()
-        {
-            //Act
-            //TODO Wijzigen naar correcte ID die altijd bestaat
-            HttpResponseMessage response = controller.Delete("1");
+            HttpResponseMessage response = GetController().Post(model);
 
             //Assert
             Assert.AreEqual(response.StatusCode, HttpStatusCode.OK);
         }
 
-        private TaskStatus Ok()
+        [TestMethod]
+        public void Post_Faulted_Password()
         {
-            throw new NotImplementedException();
+            string Email = GetRandomEmail();
+            RegisterBindingModel model = createModel(Email, "Welkom123!", "NietGelijkAanAndere1!", "Admin");
+
+            //Act
+            HttpResponseMessage response = GetController().Post(model);
+
+            //Assert
+            Assert.AreEqual(response.StatusCode, HttpStatusCode.NotFound);
         }
-
-        public AccountControllerTest()
-        {
-            //
-            // TODO: Add constructor logic here
-            //
-        }
-
-        private TestContext testContextInstance;
-
-        /// <summary>
-        ///Gets or sets the test context which provides
-        ///information about and functionality for the current test run.
-        ///</summary>
-        public TestContext TestContext
-        {
-            get
-            {
-                return testContextInstance;
-            }
-            set
-            {
-                testContextInstance = value;
-            }
-        }
-
-        #region Additional test attributes
-        //
-        // You can use the following additional attributes as you write your tests:
-        //
-        // Use ClassInitialize to run code before running the first test in the class
-        // [ClassInitialize()]
-        // public static void MyClassInitialize(TestContext testContext) { }
-        //
-        // Use ClassCleanup to run code after all tests in a class have run
-        // [ClassCleanup()]
-        // public static void MyClassCleanup() { }
-        //
-        // Use TestInitialize to run code before running each test 
-        // [TestInitialize()]
-        // public void MyTestInitialize() { }
-        //
-        // Use TestCleanup to run code after each test has run
-        // [TestCleanup()]
-        // public void MyTestCleanup() { }
-        //
-        #endregion
 
         [TestMethod]
-        public void TestMethod1()
+        public void Post_Conflict()
         {
-            //
-            // TODO: Add test logic here
-            //
+            string Email = GetRandomEmail();
+            RegisterBindingModel model = createModel(Email, "Welkom123!", "Welkom123!", "RolDieNietBestaat");
+
+            //Act
+            HttpResponseMessage response = GetController().Post(model);
+
+            //Assert
+            Assert.AreEqual(response.StatusCode, HttpStatusCode.Conflict);
+        }
+
+        [TestMethod]
+        public void Delete_OK()
+        {
+            //Act
+            //TODO Wijzigen naar correcte ID die altijd bestaat
+            HttpResponseMessage response = GetController().Delete("1");
+
+            //Assert
+            Assert.AreEqual(response.StatusCode, HttpStatusCode.OK);
+        }
+
+        [TestMethod]
+        public void Delete_NotFound()
+        {
+            //Act
+            HttpResponseMessage response = GetController().Delete("9999999");
+
+            //Assert
+            Assert.AreEqual(response.StatusCode, HttpStatusCode.OK);
+        }
+
+        [TestMethod]
+        public void Delete_Conflict()
+        {
+            //Act
+            HttpResponseMessage response = GetController().Delete("test");
+
+            //Assert
+            Assert.AreEqual(response.StatusCode, HttpStatusCode.Conflict);
+        }
+
+        [TestMethod]
+        public void Put_OK()
+        {
+            //Arrange
+            string Email = GetRandomEmail();
+            RegisterBindingModel model = createModel(Email, "Welkom1234!", "Welkom1234!", "User");
+
+            //Act
+            //TODO Wijzigen naar ID die in db staat
+            HttpResponseMessage response = GetController().Put("1", model);
+
+            //Assert
+            Assert.Equals(response.StatusCode, HttpStatusCode.OK);
+        }
+
+        [TestMethod]
+        public void Put_NotFound()
+        {
+            //Arrange
+            string Email = GetRandomEmail();
+            RegisterBindingModel model = createModel(Email, "Welkom123!", "Welkom123!", "Admin");
+
+            //Act
+            //TODO Wijzigen naar ID die in db staat
+            HttpResponseMessage response = GetController().Put("999999", model);
+
+            //Assert
+            Assert.Equals(response.StatusCode, HttpStatusCode.OK);
+        }
+
+        [TestMethod]
+        public void Put_Conflict_Id()
+        {
+            //Arrange
+            string Email = GetRandomEmail();
+            RegisterBindingModel model = createModel(Email, "Welkom123!", "Welkom123!", "Admin");
+
+            //Act
+            //TODO Wijzigen naar ID die in db staat
+            HttpResponseMessage response = GetController().Put("teest", model);
+
+            //Assert
+            Assert.Equals(response.StatusCode, HttpStatusCode.Conflict);
+        }
+
+        [TestMethod]
+        public void Put_Conflict_Role()
+        {
+            //Arrange
+            string Email = GetRandomEmail();
+            RegisterBindingModel model = createModel(Email, "Welkom123!", "Welkom123!", "TestRole");
+
+            //Act
+            //TODO Wijzigen naar ID die in db staat
+            HttpResponseMessage response = GetController().Put("1", model);
+
+            //Assert
+            Assert.Equals(response.StatusCode, HttpStatusCode.Conflict);
         }
     }
 }

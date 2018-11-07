@@ -132,9 +132,9 @@ namespace CloudApiVietnam.Controllers
                     }
                     formContentProperty.Remove(formContentProperty.First());
                 }
-                db.FormContent.
-                db.Entry(formContent).State = EntityState.Modified;
-                db.SaveChanges();
+                //db.FormContent.
+                //db.Entry(formContent).State = EntityState.Modified;
+                //db.SaveChanges();
             }
             
 
