@@ -54,7 +54,7 @@ namespace CloudApiVietnam.Tests.Controllers
             FormContentBindingModel formContentBindingModel = new FormContentBindingModel
             {
                 Content = "[{Naam':'testnaam'},{'Leeftijd':'22'},{'Afwijking':'ADHD'}]",
-                FormId = 3
+                FormId = GetFormulierenTemplateId()
             };
 
             // Act
@@ -64,6 +64,24 @@ namespace CloudApiVietnam.Tests.Controllers
             // Assert
             Assert.AreEqual(result.StatusCode, HttpStatusCode.BadRequest);
             Assert.AreEqual(resultContent.Message, "JSON in 'content' is not correct JSON: Invalid JavaScript property identifier character: '. Path '[0]', line 1, position 6.");
+        }
+
+        [TestMethod]
+        public void Post_Fail_BracketMissing()
+        {
+            FormContentBindingModel formContentBindingModel = new FormContentBindingModel
+            {
+                Content = "'Naam':'testnaam'},{'Leeftijd':'22'},{'Afwijking':'ADHD'}]",
+                FormId = GetFormulierenTemplateId()
+            };
+
+            // Act
+            HttpResponseMessage result = controller.Post(formContentBindingModel);
+            var resultContent = result.Content.ReadAsAsync<System.Web.Http.HttpError>().Result;
+
+            // Assert
+            Assert.AreEqual(result.StatusCode, HttpStatusCode.BadRequest);
+            Assert.AreEqual(resultContent.Message, "JSON in 'content' is not correct JSON: JSON doesn't start or and with with '{/}' or '[/]' ");
         }
 
         [TestMethod]
