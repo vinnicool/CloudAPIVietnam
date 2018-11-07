@@ -62,14 +62,9 @@ namespace CloudApiVietnam.Controllers
             {
                 List<UserInfo> usersInfo = new List<UserInfo>();
                 List<User> users = new List<User>();
-                try
-                {
-                    users = db.Users.ToList();
-                }
-                catch
-                {
-                    return Request.CreateErrorResponse(HttpStatusCode.BadRequest, "There are no users in the database.");
-                }
+                users = db.Users.ToList();
+                if(users == null)
+                    return Request.CreateErrorResponse(HttpStatusCode.NoContent, "There are no users in the database.");
 
                 foreach (User user in users)
                 {
@@ -85,7 +80,7 @@ namespace CloudApiVietnam.Controllers
                 return Request.CreateResponse(HttpStatusCode.OK, usersInfo);
             } catch(Exception ex)
             {
-                return Request.CreateErrorResponse(HttpStatusCode.BadRequest, "Something went wrong. Exception: " + ex);
+                return Request.CreateErrorResponse(HttpStatusCode.InternalServerError, "Something went wrong. Exception: " + ex);
             }
         }
 
@@ -96,13 +91,10 @@ namespace CloudApiVietnam.Controllers
             try
             {
                 User user = new User();
-                try
-                {
-                    user = db.Users.Where(u => u.Id == id).FirstOrDefault();
-                } catch
-                {
-                    return Request.CreateErrorResponse(HttpStatusCode.NotFound, "The user could not be found.");
-                }
+                user = db.Users.Where(u => u.Id == id).FirstOrDefault();
+
+                if(user == null)
+                    return Request.CreateErrorResponse(HttpStatusCode.NotFound, "No user found with id: " + id);
 
                 UserInfo info = new UserInfo
                 {
@@ -115,7 +107,7 @@ namespace CloudApiVietnam.Controllers
             }
             catch (Exception ex)
             {
-                return Request.CreateErrorResponse(HttpStatusCode.BadRequest, "Something went wrong. Exception: " + ex);
+                return Request.CreateErrorResponse(HttpStatusCode.InternalServerError, "Something went wrong. Exception: " + ex);
             }
         }
                
@@ -141,11 +133,11 @@ namespace CloudApiVietnam.Controllers
                 }
                 catch
                 {
-                    return Request.CreateErrorResponse(HttpStatusCode.Conflict, "De user kan niet worden toegevoegd.");
+                    return Request.CreateErrorResponse(HttpStatusCode.Conflict, "The user could not be added.");
                 }
 
                 if (!result.Succeeded)
-                    return Request.CreateErrorResponse(HttpStatusCode.BadRequest, result.Errors.ToString());
+                    return Request.CreateErrorResponse(HttpStatusCode.InternalServerError, result.Errors.ToString());
 
                 try
                 {
@@ -153,13 +145,13 @@ namespace CloudApiVietnam.Controllers
                 }
                 catch
                 {
-                    return Request.CreateErrorResponse(HttpStatusCode.Conflict, "De user role kan niet worden toegevoegd.");
+                    return Request.CreateErrorResponse(HttpStatusCode.Conflict, "The user role could not be added.");
                 }
 
                 return Request.CreateResponse(HttpStatusCode.OK, user);
             } catch (Exception ex)
             {
-                return Request.CreateErrorResponse(HttpStatusCode.BadRequest, "Something went wrong. Exception: " + ex);
+                return Request.CreateErrorResponse(HttpStatusCode.InternalServerError, "Something went wrong. Exception: " + ex);
             }
         }
         
@@ -168,13 +160,7 @@ namespace CloudApiVietnam.Controllers
         public HttpResponseMessage Delete(string id)
         {
             var User = new User();
-            try
-            {
-                User = db.Users.Where(f => f.Id == id).FirstOrDefault();
-            } catch
-            {
-                return Request.CreateErrorResponse(HttpStatusCode.Conflict, "The user that nees to be removed doesn't exist.");
-            }
+            User = db.Users.Where(f => f.Id == id).FirstOrDefault();
 
             if (User == null)
                 return Request.CreateErrorResponse(HttpStatusCode.NotFound, "No FormContent found with id: " + id.ToString());
@@ -186,9 +172,9 @@ namespace CloudApiVietnam.Controllers
                     db.SaveChanges();
                     return Request.CreateResponse(HttpStatusCode.OK);
                 }
-                catch
+                catch (Exception ex)
                 {
-                    return Request.CreateErrorResponse(HttpStatusCode.InternalServerError, "Could not remove user.");
+                    return Request.CreateErrorResponse(HttpStatusCode.InternalServerError, "Something went wrong. Exception: " + ex);
                 }
             }
         }
@@ -199,15 +185,8 @@ namespace CloudApiVietnam.Controllers
         {
             User user = new User();
             IdentityRole role = new IdentityRole();
-
-            try
-            {
-                user = db.Users.Where(f => f.Id == id).FirstOrDefault();
-                role = db.Roles.Where(r => r.Name == model.UserRole).FirstOrDefault();
-            } catch (Exception ex)
-            {
-                return Request.CreateErrorResponse(HttpStatusCode.Conflict, ex);
-            }
+            user = db.Users.Where(f => f.Id == id).FirstOrDefault();
+            role = db.Roles.Where(r => r.Name == model.UserRole).FirstOrDefault();
             
             if (user == null)
                 return Request.CreateErrorResponse(HttpStatusCode.NotFound, "No user found with id: " + id.ToString());
@@ -232,11 +211,10 @@ namespace CloudApiVietnam.Controllers
                 }
                 catch (Exception ex)
                 {
-                    return Request.CreateErrorResponse(HttpStatusCode.InternalServerError, ex);
+                    return Request.CreateErrorResponse(HttpStatusCode.InternalServerError, "Something went wrong. Exception: " + ex);
                 }
             }
         }
-
 
         #region Helpers
 
