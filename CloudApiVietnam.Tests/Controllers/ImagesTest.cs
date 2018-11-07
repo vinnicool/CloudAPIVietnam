@@ -26,7 +26,7 @@ namespace CloudApiVietnam.Tests.Controllers
 
         [TestMethod]
         [TestInitialize()]
-        public async Task PostImage_SuccesAsync()
+        public async Task PostImage_Succes()
         {
             // Arrange
             ImagesController controller = GetController();
@@ -47,7 +47,54 @@ namespace CloudApiVietnam.Tests.Controllers
             this.guid = images[0].name;
         }
         [TestMethod]
-        public async Task PostImage_ShouldReturnImageTypeNotValidAsync()
+        public async Task PostMulitpleImage_Succes()
+        {
+            // Arrange
+            ImagesController controller = GetController();
+            Byte[] image = CreateImage();
+            MultipartFormDataContent content = new MultipartFormDataContent();
+            content.Add(CreateFileContent(image, "image.jpeg", "image/jpeg"));
+            content.Add(CreateFileContent(image, "image1.png", "image/jpeg"));
+            content.Add(CreateFileContent(image, "image2.jpg", "image/jpeg"));
+            content.Add(CreateFileContent(image, "image3.jpeg", "image/jpeg"));
+            content.Add(CreateFileContent(image, "image4.jpeg", "image/jpeg"));
+            controller.Request = new HttpRequestMessage()
+            {
+                Method = HttpMethod.Post,
+                Content = content,
+            };
+            //Act
+            HttpResponseMessage response = await controller.Post();
+            //Assert
+            Assert.AreEqual(response.StatusCode, HttpStatusCode.Created);
+            List<Image> images;
+            Assert.IsTrue(response.TryGetContentValue<List<Image>>(out images));
+            Assert.IsTrue(images.Count == 5);
+        }
+        [TestMethod]
+        public async Task PostMulitpleImage_NotValid()
+        {
+            // Arrange
+            ImagesController controller = GetController();
+            Byte[] image = CreateImage();
+            MultipartFormDataContent content = new MultipartFormDataContent();
+            content.Add(CreateFileContent(image, "image.jpeg", "image/jpeg"));
+            content.Add(CreateFileContent(image, "image1.png", "image/jpeg"));
+            content.Add(CreateFileContent(image, "image2.docx", "image/jpeg"));
+            content.Add(CreateFileContent(image, "image3.jpeg", "image/jpeg"));
+            content.Add(CreateFileContent(image, "image4.jpeg", "image/jpeg"));
+            controller.Request = new HttpRequestMessage()
+            {
+                Method = HttpMethod.Post,
+                Content = content,
+            };
+            //Act
+            HttpResponseMessage response = await controller.Post();
+            //Assert
+            Assert.AreEqual(response.StatusCode, HttpStatusCode.BadRequest);
+        }
+        [TestMethod]
+        public async Task PostImage_TypeNotValid()
         {
             // Arrange
             ImagesController controller = GetController();
@@ -69,7 +116,7 @@ namespace CloudApiVietnam.Tests.Controllers
             Assert.AreEqual(response.StatusCode, HttpStatusCode.BadRequest);
         }
         [TestMethod]
-        public async Task GetImage_ShouldReturnImageNotFoundAsync()
+        public async Task GetImage_NotFound()
         {
             // Arrange
             // None
@@ -81,7 +128,7 @@ namespace CloudApiVietnam.Tests.Controllers
             Assert.AreEqual(response.StatusCode, HttpStatusCode.NotFound);
         }
         [TestMethod]
-        public async Task GetImage_ImageFoundAsync()
+        public async Task GetImage_ImageFound()
         {
             // Arrange
 
@@ -95,7 +142,7 @@ namespace CloudApiVietnam.Tests.Controllers
 
         }
         [TestMethod]
-        public async Task DeleteImage_ImageNotFoundAsync()
+        public async Task DeleteImage_NotFound()
         {
             // Arrange
 
@@ -106,7 +153,7 @@ namespace CloudApiVietnam.Tests.Controllers
             Assert.AreEqual(response.StatusCode, HttpStatusCode.NotFound);
         }
         [TestMethod]
-        public async Task DeleteImage_NoContentAsync()
+        public async Task DeleteImage_NoContent()
         {
             // Arrange
 

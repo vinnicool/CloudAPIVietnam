@@ -77,6 +77,18 @@ namespace CloudApiVietnam.Tests.Controllers
 
         }
 
+
+        [TestMethod]
+        public void Delete_Fail()
+        {
+            HttpResponseMessage result = controller.Delete(-99999);
+            var resultContent = result.Content.ReadAsAsync<System.Web.Http.HttpError>().Result;
+            // Assert
+            Assert.AreEqual(result.StatusCode, HttpStatusCode.NotFound);
+            Assert.AreEqual(resultContent.Message, "No FormContent found with id: -99999");
+
+        }
+
         [TestMethod]
         public void GetById_Succes()
         {

@@ -127,7 +127,9 @@ namespace CloudApiVietnam.Controllers
                 bool contains = types.Contains(imageType, StringComparer.OrdinalIgnoreCase);
                 if (!contains)
                     return result = Request.CreateResponse(HttpStatusCode.BadRequest, "Types of Digital Image should be: jpeg, jpg or png");
-
+            }
+            foreach (var file in provider.Contents)
+            {
                 Stream imageStream = await file.ReadAsStreamAsync();
                 var blobNameReference = $"{Guid.NewGuid().ToString()}";
 
