@@ -19,8 +19,16 @@ namespace CloudApiVietnam.Tests.Controllers
     [TestClass]
     public class AccountControllerTest
     {
-        //Arrange
-        private AccountController GetController()
+        private string id;
+
+        private AccountController controller = new AccountController
+        {
+            Request = new System.Net.Http.HttpRequestMessage(),
+            Configuration = new HttpConfiguration(),
+            ControllerContext = new System.Web.Http.Controllers.HttpControllerContext()
+        };
+
+        private static AccountController GetController()
         {
             return new AccountController
             {
@@ -58,8 +66,7 @@ namespace CloudApiVietnam.Tests.Controllers
         public void GetById_Ok()
         {
             //Act
-            //TODO ID aanpassen aan ID die in de db staat...
-            HttpResponseMessage response = GetController().Get("1");
+            HttpResponseMessage response = GetController().Get(id);
 
             //Assert
             Assert.AreEqual(response.StatusCode, HttpStatusCode.OK);
@@ -76,16 +83,21 @@ namespace CloudApiVietnam.Tests.Controllers
         }
 
         [TestMethod]
+        [TestInitialize()]
         public void Post_Ok()
         {
             string Email = GetRandomEmail();
             RegisterBindingModel model = createModel(Email, "Welkom123!", "Welkom123!", "Admin");
 
             //Act
-            HttpResponseMessage response = GetController().Post(model);
+            HttpResponseMessage response = controller.Post(model);
 
             //Assert
             Assert.AreEqual(response.StatusCode, HttpStatusCode.OK);
+
+            User user;
+            Assert.IsTrue(response.TryGetContentValue<User>(out user));
+            id = user.Id;
         }
 
         [TestMethod]
@@ -115,11 +127,11 @@ namespace CloudApiVietnam.Tests.Controllers
         }
 
         [TestMethod]
+        [TestCleanup()]
         public void Delete_OK()
         {
             //Act
-            //TODO Wijzigen naar correcte ID die altijd bestaat
-            HttpResponseMessage response = GetController().Delete("1");
+            HttpResponseMessage response = GetController().Delete(id);
 
             //Assert
             Assert.AreEqual(response.StatusCode, HttpStatusCode.OK);
@@ -132,7 +144,7 @@ namespace CloudApiVietnam.Tests.Controllers
             HttpResponseMessage response = GetController().Delete("9999999");
 
             //Assert
-            Assert.AreEqual(response.StatusCode, HttpStatusCode.OK);
+            Assert.AreEqual(response.StatusCode, HttpStatusCode.NotFound);
         }
 
         [TestMethod]
@@ -153,8 +165,7 @@ namespace CloudApiVietnam.Tests.Controllers
             RegisterBindingModel model = createModel(Email, "Welkom1234!", "Welkom1234!", "User");
 
             //Act
-            //TODO Wijzigen naar ID die in db staat
-            HttpResponseMessage response = GetController().Put("1", model);
+            HttpResponseMessage response = GetController().Put(id, model);
 
             //Assert
             Assert.Equals(response.StatusCode, HttpStatusCode.OK);
@@ -168,7 +179,6 @@ namespace CloudApiVietnam.Tests.Controllers
             RegisterBindingModel model = createModel(Email, "Welkom123!", "Welkom123!", "Admin");
 
             //Act
-            //TODO Wijzigen naar ID die in db staat
             HttpResponseMessage response = GetController().Put("999999", model);
 
             //Assert
@@ -183,7 +193,6 @@ namespace CloudApiVietnam.Tests.Controllers
             RegisterBindingModel model = createModel(Email, "Welkom123!", "Welkom123!", "Admin");
 
             //Act
-            //TODO Wijzigen naar ID die in db staat
             HttpResponseMessage response = GetController().Put("teest", model);
 
             //Assert
@@ -198,8 +207,7 @@ namespace CloudApiVietnam.Tests.Controllers
             RegisterBindingModel model = createModel(Email, "Welkom123!", "Welkom123!", "TestRole");
 
             //Act
-            //TODO Wijzigen naar ID die in db staat
-            HttpResponseMessage response = GetController().Put("1", model);
+            HttpResponseMessage response = GetController().Put(id, model);
 
             //Assert
             Assert.Equals(response.StatusCode, HttpStatusCode.Conflict);
