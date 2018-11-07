@@ -1,15 +1,10 @@
-﻿using System;
-using System.Text;
-using System.Collections.Generic;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using CloudApiVietnam.Controllers;
 using CloudApiVietnam.Models;
 using System.Net.Http;
 using System.Net;
 using System.Web.Http;
-using System.Threading.Tasks;
 using System.IO;
-using System.Web.Http.Results;
 
 namespace CloudApiVietnam.Tests.Controllers
 {
