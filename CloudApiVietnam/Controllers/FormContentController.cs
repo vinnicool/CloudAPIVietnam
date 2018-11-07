@@ -54,20 +54,24 @@ namespace CloudApiVietnam.Controllers
                     return Request.CreateErrorResponse(HttpStatusCode.BadRequest, "JSON in 'content' is not correct JSON: " + isJson.Error);
                 }
 
-                var headersCheck = ContentEqeulsHeaders(formContentBindingModel);
+
+                ContentEqeulsHeadersCheck headersCheck = ContentEqeulsHeaders(formContentBindingModel);
                 if (!headersCheck.Status)
                 {
                     return Request.CreateErrorResponse(HttpStatusCode.BadRequest, headersCheck.Error);
                 }
 
-                FormContent formContent = new FormContent();
-                formContent.Content = formContentBindingModel.Content;
-                formContent.FormulierenId = formContentBindingModel.FormId;
+                FormContent formContent = new FormContent
+                {
+                    Content = formContentBindingModel.Content,
+                    FormulierenId = formContentBindingModel.FormId
+                };
 
 
                 db.FormContent.Add(formContent);
                 db.SaveChanges();
-                return Request.CreateResponse(HttpStatusCode.OK);
+
+                return Request.CreateResponse(HttpStatusCode.OK, formContent);
             }
             catch (Exception ex)
             {
@@ -87,8 +91,30 @@ namespace CloudApiVietnam.Controllers
             else
             {
                 formContent.FormulierenId = UpdateObject.FormId;
+
+                IsJSON isJson = IsValidJson(UpdateObject.Content); // Check of JSON klopt en maak resultaat object
+                if (!isJson.Status) // als resultaat object status fals is return error
+                {
+                    return Request.CreateErrorResponse(HttpStatusCode.BadRequest, "JSON in 'content' is not correct JSON: " + isJson.Error);
+                }
+
+
+                ContentEqeulsHeadersCheck headersCheck = ContentEqeulsHeaders(UpdateObject);
+                if (!headersCheck.Status)
+                {
+                    return Request.CreateErrorResponse(HttpStatusCode.BadRequest, headersCheck.Error);
+                }
+
                 formContent.Content = UpdateObject.Content;
-                return Request.CreateResponse(HttpStatusCode.OK, formContent);
+                try
+                {
+                    db.SaveChanges();
+                    return Request.CreateResponse(HttpStatusCode.OK, formContent);
+                }
+                catch (Exception ex)
+                {
+                    return Request.CreateErrorResponse(HttpStatusCode.InternalServerError, ex);
+                }
             }
         }
 
@@ -96,16 +122,23 @@ namespace CloudApiVietnam.Controllers
         public HttpResponseMessage Delete(int id)
         {
             var formContent = db.FormContent.Where(f => f.Id == id).FirstOrDefault();
-
+            
             if (formContent == null)
             {
                 return Request.CreateErrorResponse(HttpStatusCode.NotFound, "No FormContent found with id: " + id.ToString());
             }
             else
             {
-                db.FormContent.Remove(formContent);
-                db.SaveChanges();
-                return Request.CreateResponse(HttpStatusCode.OK);
+                try
+                {
+                    db.FormContent.Remove(formContent);
+                    db.SaveChanges();
+                    return Request.CreateResponse(HttpStatusCode.OK);
+                }
+                catch (Exception ex)
+                {
+                    return Request.CreateErrorResponse(HttpStatusCode.InternalServerError, ex);
+                }
             }
         }
 
@@ -126,14 +159,12 @@ namespace CloudApiVietnam.Controllers
                 catch (JsonReaderException jex)
                 {
                     //Exception in parsing json
-                    Console.WriteLine(jex.Message);
                     result.Error = jex.Message;
                     result.Status = false;
                     return result;
                 }
                 catch (Exception ex) //some other exception
                 {
-                    Console.WriteLine(ex.ToString());
                     result.Error = ex.ToString();
                     result.Status = false;
                     return result;

@@ -44,6 +44,7 @@ namespace CloudApiVietnam.Controllers
             }
         }
 
+
         // POST een Formulier
         public HttpResponseMessage Post(FormulierenBindingModel formulierenBindingModel)
         {
@@ -141,13 +142,28 @@ namespace CloudApiVietnam.Controllers
             return Request.CreateErrorResponse(HttpStatusCode.BadRequest, "The paramaters doesn't contain a type or the type isn't known.");
         }
 
-        // DELETE api/values/5
-        public IHttpActionResult Delete(int id)
+ 
+        public HttpResponseMessage Delete(int id)
         {
-            var formulier = db.Formulieren.Where(f => f.Id == id).FirstOrDefault();
-            db.Formulieren.Remove(formulier);
-            db.SaveChanges();
-            return Ok();
+            var formulier = db.FormContent.Where(f => f.Id == id).FirstOrDefault();
+
+            if (formulier == null)
+            {
+                return Request.CreateErrorResponse(HttpStatusCode.NotFound, "No Form found with id: " + id.ToString());
+            }
+            else
+            {
+                try
+                {
+                    db.FormContent.Remove(formulier);
+                    db.SaveChanges();
+                    return Request.CreateResponse(HttpStatusCode.OK);
+                }
+                catch (Exception ex)
+                {
+                    return Request.CreateErrorResponse(HttpStatusCode.InternalServerError, ex);
+                }
+            }
         }
 
         private static IsJSON IsValidJson(string strInput)
