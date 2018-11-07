@@ -74,75 +74,58 @@ namespace CloudApiVietnam.Controllers
         // PUT api/values/5
         public HttpResponseMessage Put(int id, [FromBody]FormulierenBindingModel UpdateObject)
         {
-            var form = db.Formulieren.Where(f => f.Id == id).FirstOrDefault();
-
-            if (form == null)
+            try
             {
-                return Request.CreateErrorResponse(HttpStatusCode.NotFound, "No form found with id: " + id.ToString());
-            }
+                var form = db.Formulieren.Where(f => f.Id == id).FirstOrDefault();
 
-            var formContentList = db.FormContent.Where(s => s.FormulierenId == id).Select(p => p.Content).ToList();
+                if (form == null)
+                    return Request.CreateErrorResponse(HttpStatusCode.NotFound, "No form found with id: " + id.ToString());
 
-            List<JArray> formContentArray = new List<JArray>();
+                if (form.FormTemplate == UpdateObject.FormTemplate) //check if tmeplate is changed
+                    return Request.CreateErrorResponse(HttpStatusCode.BadRequest, "The template hasn't been changed. Please submit a changed template.");
 
-            foreach (var formContent in formContentList)
-            {
-                formContentArray.Add(JArray.Parse(formContent));
-            }
+                var formContentList = db.FormContent.Where(s => s.FormulierenId == id).ToList(); //get all the formContents related to the form
 
-            form.Name = UpdateObject.Name;
-            form.Region = UpdateObject.Region;
-            form.FormTemplate = UpdateObject.FormTemplate;
-            var formTemplate = JArray.Parse(form.FormTemplate);
- 
-            foreach (var formContent in formContentArray.ToList())
-            {
-                bool changed = false;
-                List<string> unchangedTokens = new List<string>();
-                foreach (JObject formContentToken in formContent.ToList())
+                List<JArray> formContentArray = new List<JArray>();
+
+                foreach (var formContent in formContentList)
+                    formContentArray.Add(JArray.Parse(formContent.Content)); //parse db data to JSON list
+
+                form.Name = UpdateObject.Name;
+                form.Region = UpdateObject.Region;
+                form.FormTemplate = UpdateObject.FormTemplate;
+
+                IsJSON isJson = IsValidJson(form.FormTemplate);
+
+                if (!isJson.Status) // Check if new formTemplate is correct JSON
+                    return Request.CreateErrorResponse(HttpStatusCode.BadRequest, "JSON in 'template' is not correct JSON: " + isJson.Error);
+
+                var formTemplate = JArray.Parse(form.FormTemplate); //parse new template to JSON
+
+                if (formTemplate.Count - formContentArray.FirstOrDefault().Count > 1 || formTemplate.Count - formContentArray.FirstOrDefault().Count < -1)
+                    return Request.CreateErrorResponse(HttpStatusCode.BadRequest, "Only 1 key can be added/removed/edited at a time");
+
+                UpdateFormContent(formContentArray, formTemplate);
+
+                foreach (var content in formContentList)
                 {
-                    List<JProperty> formContentProperty = formContentToken.Properties().ToList();
-
-                    foreach (JObject formTemplateToken in formTemplate.ToList())
+                    foreach (var newContent in formContentArray)
                     {
-                        List<JProperty> formTemplateProperty = formTemplateToken.Properties().ToList();
-
-                        if (formContentProperty.First().Name != formTemplateProperty.First().Name && !changed && !unchangedTokens.Contains(formContentProperty.First().Name) && !unchangedTokens.Contains(formTemplateProperty.First().Name))
-                        {
-                            if (formContent.Count == formTemplate.Count)
-                            {
-                                formContentToken[formTemplateProperty.First().Name] = formContentProperty.First().Value;
-                                formContentToken.Remove(formContentProperty.First().Name);
-                            }
-                            if (formContent.Count < formTemplate.Count)
-                            {
-                                formContent.Add(formTemplateToken);
-                            }
-                            if (formContent.Count > formTemplate.Count)
-                            {
-                                formContentToken.Remove();
-                            }
-                            changed = true;
-
-                        }
-                        else if (formContentProperty.First().Name == formTemplateProperty.First().Name)
-                        {
-                            unchangedTokens.Add(formTemplateProperty.First().Name);
-                        }
+                        content.Content = newContent.ToString();
+                        db.Entry(content).State = EntityState.Modified;
+                        db.SaveChanges();
                     }
-                    formContentProperty.Remove(formContentProperty.First());
                 }
-                //db.FormContent.
-                //db.Entry(formContent).State = EntityState.Modified;
-                //db.SaveChanges();
-            }
-            
 
-            return Request.CreateResponse(HttpStatusCode.OK, form);
-            return Request.CreateErrorResponse(HttpStatusCode.BadRequest, "The paramaters doesn't contain a type or the type isn't known.");
+                return Request.CreateResponse(HttpStatusCode.OK, form);
+            }
+            catch (Exception ex)
+            {
+                return Request.CreateErrorResponse(HttpStatusCode.InternalServerError, ex); ;
+            }
+
         }
 
- 
         public HttpResponseMessage Delete(int id)
         {
             var formulier = db.FormContent.Where(f => f.Id == id).FirstOrDefault();
@@ -200,6 +183,52 @@ namespace CloudApiVietnam.Controllers
                 result.Status = false;
                 result.Error = "JSON doesn't start or and with with '{/}' or '[/]' ";
                 return result;
+            }
+        }
+
+        private static void UpdateFormContent(List<JArray> formContentArray, JArray formTemplate)
+        {
+            foreach (var formContent in formContentArray.ToList()) //loop through formContent related to form
+            {
+                bool changed = false;
+                List<string> unchangedTokens = new List<string>();
+                foreach (JObject formContentToken in formContent.ToList()) //loop through the tokens of each formContent
+                {
+                    List<JProperty> formContentProperty = formContentToken.Properties().ToList(); //property is being used to get the key
+
+                    foreach (JObject formTemplateToken in formTemplate.ToList()) //loop through the tokens of formTemplate
+                    {
+                        List<JProperty> formTemplateProperty = formTemplateToken.Properties().ToList();
+
+                        if (formContentProperty.First().Name != formTemplateProperty.First().Name && !changed && !unchangedTokens.Contains(formContentProperty.First().Name) && !unchangedTokens.Contains(formTemplateProperty.First().Name))
+                        {
+                            if (formContent.Count == formTemplate.Count) //check if a token is being edited, added or removed
+                                formContentToken[formTemplateProperty.First().Name] = formContentProperty.First().Value;
+                                formContentToken.Remove(formContentProperty.First().Name);
+
+                            if (formContent.Count < formTemplate.Count) //more headers than tokens
+                                formContent.Add(formTemplateToken);
+
+                            if (formContent.Count > formTemplate.Count) //more tokens than headers
+                                formContentToken.Remove();
+
+                            changed = true;
+                        }
+                        else if (formContentProperty.First().Name == formTemplateProperty.First().Name) //if a token is unchanged, put it in this list
+                        {
+                            unchangedTokens.Add(formTemplateProperty.First().Name);
+                        }
+                    }
+                    formContentProperty.Remove(formContentProperty.First());
+                }
+                if (!changed && formContent.Count > formTemplate.Count) //remove last token of formContent if no token has been removed
+                {
+                    formContent.Remove(formContent.Last);
+                }
+                else if (!changed && formContent.Count < formTemplate.Count) //add last token of formTemplate if no token has been added
+                {
+                    formContent.Add(formTemplate.Last);
+                }
             }
         }
     }

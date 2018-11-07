@@ -21,6 +21,10 @@ namespace CloudApiVietnam.Controllers
             try
             {
                 var formContent = db.FormContent.ToList();
+                if (formContent == null)
+                {
+                    return Request.CreateResponse(HttpStatusCode.NoContent, "No FormContent found");
+                }
                 return Request.CreateResponse(HttpStatusCode.OK, formContent);
             }
             catch (Exception ex)
@@ -53,7 +57,6 @@ namespace CloudApiVietnam.Controllers
                 {
                     return Request.CreateErrorResponse(HttpStatusCode.BadRequest, "JSON in 'content' is not correct JSON: " + isJson.Error);
                 }
-
 
                 ContentEqeulsHeadersCheck headersCheck = ContentEqeulsHeaders(formContentBindingModel);
                 if (!headersCheck.Status)
@@ -122,7 +125,7 @@ namespace CloudApiVietnam.Controllers
         public HttpResponseMessage Delete(int id)
         {
             var formContent = db.FormContent.Where(f => f.Id == id).FirstOrDefault();
-            
+
             if (formContent == null)
             {
                 return Request.CreateErrorResponse(HttpStatusCode.NotFound, "No FormContent found with id: " + id.ToString());
@@ -195,7 +198,7 @@ namespace CloudApiVietnam.Controllers
                 if (!Formulier.FormTemplate.Contains(propertyName))
                 {
                     result.Status = false;
-                    result.Error = "'" + propertyName+ "'" + " is not found in the headers of the matching Formulier";
+                    result.Error = "'" + propertyName + "'" + " is not found in the headers of the matching Formulier";
                     return result;
                 }
             }

@@ -7,13 +7,34 @@ using CloudApiVietnam.Models;
 using System.Net.Http;
 using System.Net;
 using System.Web.Http;
+using System.Linq;
 
 namespace CloudApiVietnam.Tests.Controllers
 {
+    /// <summary>
+    /// Summary description for UnitTest1
+    /// </summary>
     [TestClass]
     public class FormulierenControllerTest
     {
+        FormulierenController controller = new FormulierenController();
         private int id;
+        [TestMethod]
+        [TestInitialize()]
+        public void FormGet_Ok()
+        {
+            // Arramge
+            FormulierenController controller = GetController();
+
+            // Act
+            HttpResponseMessage actionResult = controller.Get();
+
+            // Assert
+            List<Formulieren> formulier;
+            Assert.IsTrue(actionResult.TryGetContentValue<List<Formulieren>>(out formulier));
+            this.id = formulier.FirstOrDefault().Id;
+            Assert.AreEqual(actionResult.StatusCode, HttpStatusCode.OK);
+        }
 
         private static FormulierenController GetController()
         {
@@ -24,113 +45,152 @@ namespace CloudApiVietnam.Tests.Controllers
             };
         }
 
-        private FormulierenBindingModel createFormulierenModel(string Name, string Region, string FormTemplate)
-        {
-            FormulierenBindingModel model = new FormulierenBindingModel
-            {
-                Name = Name,
-                Region = Region,
-                FormTemplate = FormTemplate
-            };
-            return model;
-        }
-
         [TestMethod]
-        [TestInitialize()]
-        public void Get_Ok()
+        public void FormGetWithId_Ok()
         {
-            // Arrange
+            // Arramge
             FormulierenController controller = GetController();
 
             // Act
-            HttpResponseMessage response = controller.Get();
+            //How to determine wich id to pass?
+            HttpResponseMessage actionResult = controller.Get(this.id);
 
             // Assert
-            List<Formulieren> formulier;
-            Assert.IsTrue(response.TryGetContentValue<List<Formulieren>>(out formulier));
-            id = formulier[0].Id; //Probeer het Id van het eerste formulier te krijgen
-            Assert.AreEqual(response.StatusCode, HttpStatusCode.OK);
+            Assert.AreEqual(actionResult.StatusCode, HttpStatusCode.OK);
         }
 
         [TestMethod]
-        public void GetById_Ok()
+        public void FormGetWithId_NotFound()
         {
-            // Arrange
+            // Arramge
             FormulierenController controller = GetController();
 
             // Act
-            HttpResponseMessage response = controller.Get(id);
+            HttpResponseMessage actionResult = controller.Get(-2);
 
             // Assert
-            Assert.AreEqual(response.StatusCode, HttpStatusCode.OK);
+            Assert.AreEqual(actionResult.StatusCode, HttpStatusCode.NotFound);
         }
 
         [TestMethod]
-        public void GetById_NotFound()
+        public void FormPost_Ok()
         {
-            // Arrange
+            // Arramge
             FormulierenController controller = GetController();
+            FormulierenBindingModel formulierenBindingModel = new FormulierenBindingModel();
+            formulierenBindingModel.Name = "Testformulier9999";
+            formulierenBindingModel.Region = "Zuid-Holland";
+            formulierenBindingModel.FormTemplate = "[{'Naam':'string'},{'Leeftijd':'string'},{'Afwijking':'string'}]";
 
             // Act
-            HttpResponseMessage response = controller.Get(-2);
+            HttpResponseMessage actionResult = controller.Post(formulierenBindingModel);
 
             // Assert
-            Assert.AreEqual(response.StatusCode, HttpStatusCode.NotFound);
+            Assert.AreEqual(actionResult.StatusCode, HttpStatusCode.OK);
         }
 
         [TestMethod]
-        public void Post_Ok()
+        public void FormPost_BadRequest()
         {
-            // Arrange
+            // Arramge
+            // Arramge
             FormulierenController controller = GetController();
-            FormulierenBindingModel model = createFormulierenModel("Testformulier9999", "Zuid-Holland", "[{'Naam':'string'},{'Leeftijd':'string'},{'Woonplaats':'string'}]");
-            
+
+            FormulierenBindingModel formulierenBindingModel = new FormulierenBindingModel();
+            formulierenBindingModel.Name = "Testformulier9999";
+            formulierenBindingModel.Region = "Zuid-Holland";
+            formulierenBindingModel.FormTemplate = "{iets:data";
+
             // Act
-            HttpResponseMessage response = controller.Post(model);
+            HttpResponseMessage actionResult = controller.Post(formulierenBindingModel);
 
             // Assert
-            Assert.AreEqual(response.StatusCode, HttpStatusCode.OK);
+            Assert.AreEqual(actionResult.StatusCode, HttpStatusCode.BadRequest);
         }
 
         [TestMethod]
-        public void Post_BadRequest()
+        public void FormDeleteWithId_NotFound()
         {
-            // Arrange
+            // Arramge
             FormulierenController controller = GetController();
-            FormulierenBindingModel model = createFormulierenModel("Testformulier9999", "Zuid-Holland", "{iets:data");
 
             // Act
-            HttpResponseMessage response = controller.Post(model);
+            //How to determine wich id to pass?
+            HttpResponseMessage actionResult = controller.Get(-2);
 
             // Assert
-            Assert.AreEqual(response.StatusCode, HttpStatusCode.BadRequest);
+            Assert.AreEqual(actionResult.StatusCode, HttpStatusCode.NotFound);
         }
 
         [TestMethod]
-        public void Delete_NotFound()
+        public void Put_Edit_Succes()
         {
-            // Arrange
+            FormulierenBindingModel formBindingModel = new FormulierenBindingModel();
             FormulierenController controller = GetController();
+            Random rnd = new Random();
 
-            // Act
-            HttpResponseMessage response = controller.Get(-2);
+            formBindingModel.FormTemplate = "[{'Naam':'testnaam'},{'Leeftijd':'22'},{'" + rnd.Next(1, 100).ToString() + "':'ADHD'}]";
+            formBindingModel.Region = "test";
+            formBindingModel.Name = "name";
 
+            HttpResponseMessage result = controller.Put(this.id, formBindingModel);
+            var resultContent = result.Content.ReadAsAsync<dynamic>().Result;
             // Assert
-            Assert.AreEqual(response.StatusCode, HttpStatusCode.NotFound);
+            Assert.AreEqual(result.StatusCode, HttpStatusCode.OK);
+            Assert.IsNotNull(resultContent);
+        }
+
+        [TestMethod]
+        public void Put_Add_Succes()
+        {
+            FormulierenBindingModel formBindingModel = new FormulierenBindingModel();
+            FormulierenController controller = GetController();
+            Random rnd = new Random();
+
+            formBindingModel.FormTemplate = "[{'Naam':'testnaam'},{'Leeftijd':'22'},{'Afwijking':'string'}]";
+            formBindingModel.Region = "test";
+            formBindingModel.Name = "name";
+
+            HttpResponseMessage result = controller.Put(this.id, formBindingModel);
+            var resultContent = result.Content.ReadAsAsync<dynamic>().Result;
+            // Assert
+            Assert.AreEqual(result.StatusCode, HttpStatusCode.OK);
+            Assert.IsNotNull(resultContent);
+        }
+
+        [TestMethod]
+        public void Put_Delete_Succes()
+        {
+            FormulierenBindingModel formBindingModel = new FormulierenBindingModel();
+            FormulierenController controller = GetController();
+            Random rnd = new Random();
+
+            formBindingModel.FormTemplate = "[{'Naam':'testnaam'},{'Leeftijd':'22'}]";
+            formBindingModel.Region = "test";
+            formBindingModel.Name = "name";
+
+            HttpResponseMessage result = controller.Put(this.id, formBindingModel);
+            var resultContent = result.Content.ReadAsAsync<dynamic>().Result;
+            // Assert
+            Assert.AreEqual(result.StatusCode, HttpStatusCode.OK);
+            Assert.IsNotNull(resultContent);
         }
 
         [TestMethod]
         [TestCleanup()]
-        public void Delete_NoContent()
+        public void FormDeleteWithId_NoContent()
         {
-            // Arrange
+            // Arramge
             FormulierenController controller = GetController();
 
             // Act
-            HttpResponseMessage response = controller.Get(id);
+            //How to determine wich id to pass?
+            HttpResponseMessage actionResult = controller.Get(this.id);
 
             // Assert
-            Assert.AreEqual(response.StatusCode, HttpStatusCode.OK);
+            Assert.AreEqual(actionResult.StatusCode, HttpStatusCode.OK);
         }
+
+        
     }
 }

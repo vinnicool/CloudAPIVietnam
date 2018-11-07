@@ -1,15 +1,10 @@
-﻿using System;
-using System.Text;
-using System.Collections.Generic;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using CloudApiVietnam.Controllers;
 using CloudApiVietnam.Models;
 using System.Net.Http;
 using System.Net;
 using System.Web.Http;
-using System.Threading.Tasks;
 using System.IO;
-using System.Web.Http.Results;
 
 namespace CloudApiVietnam.Tests.Controllers
 {
@@ -23,21 +18,15 @@ namespace CloudApiVietnam.Tests.Controllers
 
         private AccountController controller = new AccountController
         {
-            Request = new System.Net.Http.HttpRequestMessage(),
-            Configuration = new HttpConfiguration(),
-            ControllerContext = new System.Web.Http.Controllers.HttpControllerContext()
+            Request = new HttpRequestMessage(),
+            Configuration = new HttpConfiguration()
+
         };
 
-        private static AccountController GetController()
-        {
-            return new AccountController
-            {
-                Request = new System.Net.Http.HttpRequestMessage(),
-                Configuration = new HttpConfiguration()
-            };
-        }
 
-        private RegisterBindingModel createModel(string Email, string Password, string ConfirmPassword, string UserRole) 
+
+
+        private RegisterBindingModel createModel(string Email, string Password, string ConfirmPassword, string UserRole)
         {
             RegisterBindingModel model = new RegisterBindingModel();
             model.Email = Email;
@@ -56,17 +45,17 @@ namespace CloudApiVietnam.Tests.Controllers
         public void Get_Ok()
         {
             // Act
-            HttpResponseMessage response = GetController().Get();
+            HttpResponseMessage response = controller.Get();
 
             // Assert
             Assert.AreEqual(response.StatusCode, HttpStatusCode.OK);
         }
 
-        [TestMethod] 
+        [TestMethod]
         public void GetById_Ok()
         {
             //Act
-            HttpResponseMessage response = GetController().Get(id);
+            HttpResponseMessage response = controller.Get(id);
 
             //Assert
             Assert.AreEqual(response.StatusCode, HttpStatusCode.OK);
@@ -76,7 +65,7 @@ namespace CloudApiVietnam.Tests.Controllers
         public void GetById_NotFound()
         {
             //Act
-            HttpResponseMessage response = GetController().Get("999999");
+            HttpResponseMessage response = controller.Get("999999");
 
             //Assert
             Assert.AreEqual(response.StatusCode, HttpStatusCode.NotFound);
@@ -98,6 +87,7 @@ namespace CloudApiVietnam.Tests.Controllers
             User user;
             Assert.IsTrue(response.TryGetContentValue<User>(out user));
             id = user.Id;
+
         }
 
         [TestMethod]
@@ -107,7 +97,7 @@ namespace CloudApiVietnam.Tests.Controllers
             RegisterBindingModel model = createModel(Email, "Welkom123!", "NietGelijkAanAndere1!", "Admin");
 
             //Act
-            HttpResponseMessage response = GetController().Post(model);
+            HttpResponseMessage response = controller.Post(model);
 
             //Assert
             Assert.AreEqual(response.StatusCode, HttpStatusCode.NotFound);
@@ -120,7 +110,7 @@ namespace CloudApiVietnam.Tests.Controllers
             RegisterBindingModel model = createModel(Email, "Welkom123!", "Welkom123!", "RolDieNietBestaat");
 
             //Act
-            HttpResponseMessage response = GetController().Post(model);
+            HttpResponseMessage response = controller.Post(model);
 
             //Assert
             Assert.AreEqual(response.StatusCode, HttpStatusCode.Conflict);
@@ -131,7 +121,7 @@ namespace CloudApiVietnam.Tests.Controllers
         public void Delete_OK()
         {
             //Act
-            HttpResponseMessage response = GetController().Delete(id);
+            HttpResponseMessage response = controller.Delete(id);
 
             //Assert
             Assert.AreEqual(response.StatusCode, HttpStatusCode.OK);
@@ -141,7 +131,7 @@ namespace CloudApiVietnam.Tests.Controllers
         public void Delete_NotFound()
         {
             //Act
-            HttpResponseMessage response = GetController().Delete("9999999");
+            HttpResponseMessage response = controller.Delete("9999999");
 
             //Assert
             Assert.AreEqual(response.StatusCode, HttpStatusCode.NotFound);
@@ -151,7 +141,7 @@ namespace CloudApiVietnam.Tests.Controllers
         public void Delete_Conflict()
         {
             //Act
-            HttpResponseMessage response = GetController().Delete("test");
+            HttpResponseMessage response = controller.Delete("test");
 
             //Assert
             Assert.AreEqual(response.StatusCode, HttpStatusCode.Conflict);
@@ -165,7 +155,7 @@ namespace CloudApiVietnam.Tests.Controllers
             RegisterBindingModel model = createModel(Email, "Welkom1234!", "Welkom1234!", "User");
 
             //Act
-            HttpResponseMessage response = GetController().Put(id, model);
+            HttpResponseMessage response = controller.Put(id, model);
 
             //Assert
             Assert.Equals(response.StatusCode, HttpStatusCode.OK);
@@ -179,7 +169,7 @@ namespace CloudApiVietnam.Tests.Controllers
             RegisterBindingModel model = createModel(Email, "Welkom123!", "Welkom123!", "Admin");
 
             //Act
-            HttpResponseMessage response = GetController().Put("999999", model);
+            HttpResponseMessage response = controller.Put("999999", model);
 
             //Assert
             Assert.Equals(response.StatusCode, HttpStatusCode.OK);
@@ -193,7 +183,7 @@ namespace CloudApiVietnam.Tests.Controllers
             RegisterBindingModel model = createModel(Email, "Welkom123!", "Welkom123!", "Admin");
 
             //Act
-            HttpResponseMessage response = GetController().Put("teest", model);
+            HttpResponseMessage response = controller.Put("teest", model);
 
             //Assert
             Assert.Equals(response.StatusCode, HttpStatusCode.Conflict);
@@ -207,7 +197,7 @@ namespace CloudApiVietnam.Tests.Controllers
             RegisterBindingModel model = createModel(Email, "Welkom123!", "Welkom123!", "TestRole");
 
             //Act
-            HttpResponseMessage response = GetController().Put(id, model);
+            HttpResponseMessage response = controller.Put(id, model);
 
             //Assert
             Assert.Equals(response.StatusCode, HttpStatusCode.Conflict);
