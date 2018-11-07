@@ -21,6 +21,13 @@ namespace CloudApiVietnam.Tests.Controllers
     {
         private string id;
 
+        private AccountController controller = new AccountController
+        {
+            Request = new System.Net.Http.HttpRequestMessage(),
+            Configuration = new HttpConfiguration(),
+            ControllerContext = new System.Web.Http.Controllers.HttpControllerContext()
+        };
+
         private static AccountController GetController()
         {
             return new AccountController
@@ -83,7 +90,7 @@ namespace CloudApiVietnam.Tests.Controllers
             RegisterBindingModel model = createModel(Email, "Welkom123!", "Welkom123!", "Admin");
 
             //Act
-            HttpResponseMessage response = GetController().Post(model);
+            HttpResponseMessage response = controller.Post(model);
 
             //Assert
             Assert.AreEqual(response.StatusCode, HttpStatusCode.OK);
