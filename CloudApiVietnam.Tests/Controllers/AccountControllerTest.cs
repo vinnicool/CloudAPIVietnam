@@ -5,6 +5,8 @@ using System.Net.Http;
 using System.Net;
 using System.Web.Http;
 using System.IO;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace CloudApiVietnam.Tests.Controllers
 {
@@ -13,194 +15,136 @@ namespace CloudApiVietnam.Tests.Controllers
     /// </summary>
     [TestClass]
     public class AccountControllerTest
-    {
-        private string id;
-
-        private AccountController controller = new AccountController
-        {
-            Request = new HttpRequestMessage(),
-            Configuration = new HttpConfiguration()
-
-        };
-
-
-
-
-        private RegisterBindingModel createModel(string Email, string Password, string ConfirmPassword, string UserRole)
-        {
-            RegisterBindingModel model = new RegisterBindingModel();
-            model.Email = Email;
-            model.Password = Password;
-            model.ConfirmPassword = ConfirmPassword;
-            model.UserRole = UserRole;
-            return model;
-        }
-
-        private string GetRandomEmail()
-        {
-            return Path.GetRandomFileName().Replace(".", "").Substring(0, 8) + "@ivobot.nl";
-        }
-
+    {  
         [TestMethod]
-        public void Get_Ok()
+        [TestCleanup()]
+        public void Delete_Succes()
         {
             // Act
-            HttpResponseMessage response = controller.Get();
-
+            HttpResponseMessage result = controller.Delete(GetFormuContentId());
             // Assert
-            Assert.AreEqual(response.StatusCode, HttpStatusCode.OK);
+            Assert.AreEqual(result.StatusCode, HttpStatusCode.OK);
         }
 
         [TestMethod]
-        public void GetById_Ok()
+        public void Delete_Fail()
         {
-            //Act
-            HttpResponseMessage response = controller.Get(id);
-
-            //Assert
-            Assert.AreEqual(response.StatusCode, HttpStatusCode.OK);
+            HttpResponseMessage result = controller.Delete(-99999);
+            var resultContent = result.Content.ReadAsAsync<System.Web.Http.HttpError>().Result;
+            // Assert
+            Assert.AreEqual(result.StatusCode, HttpStatusCode.NotFound);
+            Assert.AreEqual(resultContent.Message, "No FormContent found with id: -99999");
         }
 
         [TestMethod]
-        public void GetById_NotFound()
+        public void GetById_Succes()
         {
-            //Act
-            HttpResponseMessage response = controller.Get("999999");
+            // Act
+            HttpResponseMessage result = controller.Get(FormContentId);
+            var resultContent = result.Content.ReadAsAsync<dynamic>().Result;
+            // Assert
+            Assert.AreEqual(result.StatusCode, HttpStatusCode.OK);
+            Assert.IsNotNull(resultContent);
+        }
 
-            //Assert
-            Assert.AreEqual(response.StatusCode, HttpStatusCode.NotFound);
+        [TestMethod]
+        public void GetById_Fail()
+        {
+            // Act
+            HttpResponseMessage result = controller.Get(-99999);
+            var resultContent = result.Content.ReadAsAsync<System.Web.Http.HttpError>().Result;
+            // Assert
+            Assert.AreEqual(result.StatusCode, HttpStatusCode.NotFound);
+            Assert.AreEqual(resultContent.Message, "No FormContent found with id: -99999");
+        }
+
+        [TestMethod]
+        public void GetAll_Succes()
+        {
+            // Act
+            HttpResponseMessage result = controller.Get();
+            var resultContent = result.Content.ReadAsAsync<dynamic>().Result;
+            // Assert
+            Assert.AreEqual(result.StatusCode, HttpStatusCode.OK);
+            Assert.IsNotNull(resultContent);
+
+        }
+
+        [TestMethod]
+        public void Put_Succes()
+        {
+
+            FormContentBindingModel formContentBindingModel = new FormContentBindingModel();
+
+            formContentBindingModel.FormId = GetFormulierenTemplateId();
+            formContentBindingModel.Content = "[{'Naam':'testnaam'},{'Leeftijd':'22'},{'Afwijking':'ADHD'}]";
+
+            HttpResponseMessage result = controller.Put(FormContentId, formContentBindingModel);
+            var resultContent = result.Content.ReadAsAsync<dynamic>().Result;
+            // Assert
+            Assert.AreEqual(result.StatusCode, HttpStatusCode.OK);
+            Assert.IsNotNull(resultContent);
+
         }
 
         [TestMethod]
         [TestInitialize()]
-        public void Post_Ok()
+        public void Post_Succes()
         {
-            string Email = GetRandomEmail();
-            RegisterBindingModel model = createModel(Email, "Welkom123!", "Welkom123!", "Admin");
+            FormContentBindingModel formContentBindingModel = new FormContentBindingModel
+            {
+                Content = "[{'Naam':'testnaam'},{'Leeftijd':'22'},{'Afwijking':'ADHD'}]",
+                FormId = GetFormulierenTemplateId()
+            };
 
-            //Act
-            HttpResponseMessage response = controller.Post(model);
+            // Act
+            HttpResponseMessage result = controller.Post(formContentBindingModel);
+            var resultContent = result.Content.ReadAsAsync<FormContent>().Result;
+            FormContentId = resultContent.Id;
 
-            //Assert
-            Assert.AreEqual(response.StatusCode, HttpStatusCode.OK);
-
-            User user;
-            Assert.IsTrue(response.TryGetContentValue<User>(out user));
-            id = user.Id;
-
+            // Assert
+            Assert.AreEqual(result.StatusCode, HttpStatusCode.OK);
+            Assert.IsNotNull(resultContent);
         }
 
-        [TestMethod]
-        public void Post_Faulted_Password()
+        public int GetFormulierenTemplateId()
         {
-            string Email = GetRandomEmail();
-            RegisterBindingModel model = createModel(Email, "Welkom123!", "NietGelijkAanAndere1!", "Admin");
 
-            //Act
-            HttpResponseMessage response = controller.Post(model);
+            FormulierenController formulierencontroller = new FormulierenController
+            {
+                Request = new System.Net.Http.HttpRequestMessage(),
+                Configuration = new HttpConfiguration()
+            };
 
-            //Assert
-            Assert.AreEqual(response.StatusCode, HttpStatusCode.NotFound);
+            // Act
+            HttpResponseMessage actionResult = formulierencontroller.Get();
+
+            // Assert
+            List<Formulieren> formulier;
+            Assert.IsTrue(actionResult.TryGetContentValue<List<Formulieren>>(out formulier));
+            return formulier.FirstOrDefault().Id;
         }
 
-        [TestMethod]
-        public void Post_Conflict()
+        public int GetFormuContentId()
         {
-            string Email = GetRandomEmail();
-            RegisterBindingModel model = createModel(Email, "Welkom123!", "Welkom123!", "RolDieNietBestaat");
+            // Act
+            HttpResponseMessage actionResult = controller.Get();
 
-            //Act
-            HttpResponseMessage response = controller.Post(model);
-
-            //Assert
-            Assert.AreEqual(response.StatusCode, HttpStatusCode.Conflict);
+            // Assert
+            List<FormContent> FormContentId;
+            Assert.IsTrue(actionResult.TryGetContentValue<List<FormContent>>(out FormContentId));
+            return FormContentId.FirstOrDefault().Id;
         }
 
-        [TestMethod]
-        [TestCleanup()]
-        public void Delete_OK()
+
+
+
+        private static int FormContentId { get; set; }
+
+        FormContentController controller = new FormContentController
         {
-            //Act
-            HttpResponseMessage response = controller.Delete(id);
-
-            //Assert
-            Assert.AreEqual(response.StatusCode, HttpStatusCode.OK);
-        }
-
-        [TestMethod]
-        public void Delete_NotFound()
-        {
-            //Act
-            HttpResponseMessage response = controller.Delete("9999999");
-
-            //Assert
-            Assert.AreEqual(response.StatusCode, HttpStatusCode.NotFound);
-        }
-
-        [TestMethod]
-        public void Delete_Conflict()
-        {
-            //Act
-            HttpResponseMessage response = controller.Delete("test");
-
-            //Assert
-            Assert.AreEqual(response.StatusCode, HttpStatusCode.Conflict);
-        }
-
-        [TestMethod]
-        public void Put_OK()
-        {
-            //Arrange
-            string Email = GetRandomEmail();
-            RegisterBindingModel model = createModel(Email, "Welkom1234!", "Welkom1234!", "User");
-
-            //Act
-            HttpResponseMessage response = controller.Put(id, model);
-
-            //Assert
-            Assert.Equals(response.StatusCode, HttpStatusCode.OK);
-        }
-
-        [TestMethod]
-        public void Put_NotFound()
-        {
-            //Arrange
-            string Email = GetRandomEmail();
-            RegisterBindingModel model = createModel(Email, "Welkom123!", "Welkom123!", "Admin");
-
-            //Act
-            HttpResponseMessage response = controller.Put("999999", model);
-
-            //Assert
-            Assert.Equals(response.StatusCode, HttpStatusCode.OK);
-        }
-
-        [TestMethod]
-        public void Put_Conflict_Id()
-        {
-            //Arrange
-            string Email = GetRandomEmail();
-            RegisterBindingModel model = createModel(Email, "Welkom123!", "Welkom123!", "Admin");
-
-            //Act
-            HttpResponseMessage response = controller.Put("teest", model);
-
-            //Assert
-            Assert.Equals(response.StatusCode, HttpStatusCode.Conflict);
-        }
-
-        [TestMethod]
-        public void Put_Conflict_Role()
-        {
-            //Arrange
-            string Email = GetRandomEmail();
-            RegisterBindingModel model = createModel(Email, "Welkom123!", "Welkom123!", "TestRole");
-
-            //Act
-            HttpResponseMessage response = controller.Put(id, model);
-
-            //Assert
-            Assert.Equals(response.StatusCode, HttpStatusCode.Conflict);
-        }
+            Request = new System.Net.Http.HttpRequestMessage(),
+            Configuration = new HttpConfiguration()
+        };
     }
 }
