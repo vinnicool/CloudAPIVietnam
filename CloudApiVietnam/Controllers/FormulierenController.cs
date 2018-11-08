@@ -89,16 +89,22 @@ namespace CloudApiVietnam.Controllers
                 if (!isJson.Status) // Check if new formTemplate is correct JSON
                     return Request.CreateErrorResponse(HttpStatusCode.BadRequest, "JSON in 'template' is not correct JSON: " + isJson.Error);
 
+                form.Name = UpdateObject.Name;
+                form.Region = UpdateObject.Region;
+                form.FormTemplate = UpdateObject.FormTemplate;
+
                 var formContentList = db.FormContent.Where(s => s.FormulierenId == id).ToList(); //get all the formContents related to the form
+
+                if (formContentList.Count == 0)
+                {
+                    db.SaveChanges();
+                    return Request.CreateResponse(HttpStatusCode.OK, form);
+                }
 
                 List<JArray> formContentArray = new List<JArray>();
 
                 foreach (var formContent in formContentList)
                     formContentArray.Add(JArray.Parse(formContent.Content)); //parse db data to JSON list
-
-                form.Name = UpdateObject.Name;
-                form.Region = UpdateObject.Region;
-                form.FormTemplate = UpdateObject.FormTemplate;
 
                 var formTemplate = JArray.Parse(form.FormTemplate); //parse new template to JSON
 
