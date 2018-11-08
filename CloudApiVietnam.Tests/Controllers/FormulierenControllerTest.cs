@@ -129,7 +129,7 @@ namespace CloudApiVietnam.Tests.Controllers
             FormulierenController controller = GetController();
             Random rnd = new Random();
 
-            formBindingModel.FormTemplate = "[{'Naam':'testnaam'},{'Leeftijd':'22'},{'" + rnd.Next(1, 100).ToString() + "':'ADHD'}]";
+            formBindingModel.FormTemplate = "[{'Naam':'string'},{'Leeftijd':'22'},{'" + rnd.Next(1, 100).ToString() + "':'ADHD'}]";
             formBindingModel.Region = "test";
             formBindingModel.Name = "name";
 
@@ -137,7 +137,7 @@ namespace CloudApiVietnam.Tests.Controllers
             var resultContent = result.Content.ReadAsAsync<dynamic>().Result;
             Assert.AreEqual(result.StatusCode, HttpStatusCode.OK);
 
-            formBindingModel.FormTemplate = "[{'Naam':'testnaam'},{'Leeftijd':'22'}]";
+            formBindingModel.FormTemplate = "[{'Naam':'string'},{'Leeftijd':'22'}]";
             formBindingModel.Region = "test";
             formBindingModel.Name = "name";
 
@@ -145,7 +145,7 @@ namespace CloudApiVietnam.Tests.Controllers
             resultContent = result.Content.ReadAsAsync<dynamic>().Result;
             Assert.AreEqual(result.StatusCode, HttpStatusCode.OK);
 
-            formBindingModel.FormTemplate = "[{'Naam':'testnaam'},{'Leeftijd':'22'},{'Afwijking':'string'}]";
+            formBindingModel.FormTemplate = "[{'Naam':'string'},{'Leeftijd':'22'},{'Afwijking':'string'}]";
             formBindingModel.Region = "test";
             formBindingModel.Name = "name";
 
