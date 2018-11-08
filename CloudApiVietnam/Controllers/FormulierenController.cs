@@ -205,7 +205,7 @@ namespace CloudApiVietnam.Controllers
                             if (formContent.Count == formTemplate.Count) //check if a token is being edited, added or removed
                             {
                                 formContentToken[formTemplateProperty.First().Name] = formContentProperty.First().Value;
-                                formContentToken.Remove(formContentProperty.First().Name);
+                                formContentToken.Remove(formContentProperty.First().Name);//
                             }
                             if (formContent.Count < formTemplate.Count) //more headers than tokens
                                 formContent.Add(formTemplateToken);
