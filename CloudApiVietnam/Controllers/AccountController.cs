@@ -42,7 +42,6 @@ namespace CloudApiVietnam.Controllers
 
         public ApplicationUserManager UserManager
         {
-
             get
             {
                 return _userManager ?? Request.GetOwinContext().GetUserManager<ApplicationUserManager>();
@@ -55,41 +54,66 @@ namespace CloudApiVietnam.Controllers
 
         public ISecureDataFormat<AuthenticationTicket> AccessTokenFormat { get; private set; }
 
+        // POST api/Account/ChangePassword
+        [Route("ChangePassword")]
+        public HttpResponseMessage ChangePassword(ChangePasswordBindingModel model)
+        {
+            if (!ModelState.IsValid)
+                return Request.CreateErrorResponse(HttpStatusCode.BadRequest, ModelState);
 
+            IdentityResult result = UserManager.ChangePassword(User.Identity.GetUserId(), model.OldPassword, model.NewPassword);
+
+            if (!result.Succeeded)
+                return Request.CreateErrorResponse(HttpStatusCode.InternalServerError, "The user's password could not be changed.");
+
+            return Request.CreateResponse(HttpStatusCode.OK);
+        }
+
+        //GET /api/Account
         [Authorize(Roles = "Admin")]
         public HttpResponseMessage Get()
         {
             try
             {
+                //Haal de users op uit de database
                 List<UserInfo> usersInfo = new List<UserInfo>();
-                var users = db.Users.ToList();
+                List<User> users = db.Users.ToList();
+                if (users == null)
+                    return Request.CreateErrorResponse(HttpStatusCode.NoContent, "There are no users in the database.");
+
+                //Zet alle users van de database om naar users die getoond kunnen worden.
                 foreach (User user in users)
                 {
-                    UserInfo info = new UserInfo();
-                    info.Id = user.Id;
-                    info.Email = user.Email;
-                    info.Roles = user.Roles;
-                    info.UserName = user.UserName;
+                    UserInfo info = new UserInfo
+                    {
+                        Id = user.Id,
+                        Email = user.Email,
+                        Roles = user.Roles,
+                        UserName = user.UserName
+                    };
                     usersInfo.Add(info);
                 }
-
                 return Request.CreateResponse(HttpStatusCode.OK, usersInfo);
             }
             catch (Exception ex)
             {
-                return Request.CreateErrorResponse(HttpStatusCode.BadRequest, ex);
+                return Request.CreateErrorResponse(HttpStatusCode.InternalServerError, "Something went wrong. Exception: " + ex);
             }
         }
 
-
+        //GET /api/Account/{id}
         [Authorize(Roles = "Admin")]
         public HttpResponseMessage Get(string id)
         {
             try
             {
-                User user = new User();
-                user = db.Users.Where(u => u.Id == id).FirstOrDefault();
+                //Haal de user uit de database op
+                User user = db.Users.Where(u => u.Id == id).FirstOrDefault();
 
+                if (user == null)
+                    return Request.CreateErrorResponse(HttpStatusCode.NotFound, "No user found with id: " + id);
+
+                //Zet de user uit de database om naar een user die getoond moet worden
                 UserInfo info = new UserInfo
                 {
                     Id = user.Id,
@@ -101,149 +125,124 @@ namespace CloudApiVietnam.Controllers
             }
             catch (Exception ex)
             {
-                return Request.CreateErrorResponse(HttpStatusCode.BadRequest, ex);
+                return Request.CreateErrorResponse(HttpStatusCode.InternalServerError, "Something went wrong. Exception: " + ex);
             }
         }
 
-        
-        // POST api/Account/ChangePassword
-        [Route("ChangePassword")]
-        public async Task<IHttpActionResult> ChangePassword(ChangePasswordBindingModel model)
-        {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            IdentityResult result = await UserManager.ChangePasswordAsync(User.Identity.GetUserId(), model.OldPassword,
-                model.NewPassword);
-
-            if (!result.Succeeded)
-            {
-                return GetErrorResult(result);
-            }
-
-            return Ok();
-        }
-               
-  
+        //POST /api/Account
+        //Voor nu even AllowAnonymous voor het eenvoudig testen
         [AllowAnonymous]
         public HttpResponseMessage Post(RegisterBindingModel model)
         {
-            if (!ModelState.IsValid)
-            {
-                return Request.CreateErrorResponse(HttpStatusCode.NotFound, ModelState);
-            }
-
-            var user = new User() { UserName = model.Email, Email = model.Email };
-
-            IdentityResult result = UserManager.Create(user, model.Password);
-
-            if (!result.Succeeded)
-            {
-
-                return Request.CreateErrorResponse(HttpStatusCode.NotFound, result.Errors.ToString());
-            }
-
             try
             {
-                UserManager.AddToRole(user.Id, model.UserRole);
-            } catch (Exception ex)
-            {
-                return Request.CreateErrorResponse(HttpStatusCode.Conflict, ex);
-            }
+                //Check of het meegestuurde model valide is, stuur anders een custom message mee
+                if (!ModelState.IsValid)
+                    return Request.CreateErrorResponse(HttpStatusCode.BadRequest, ModelState);
 
-            return Request.CreateResponse(HttpStatusCode.OK, user);
+                var user = new User
+                {
+                    UserName = model.Email,
+                    Email = model.Email
+                };
+
+                IdentityResult result = new IdentityResult();
+                try
+                {
+                    result = UserManager.Create(user, model.Password);
+                }
+                catch
+                {
+                    return Request.CreateErrorResponse(HttpStatusCode.Conflict, "The user could not be added.");
+                }
+
+                if (!result.Succeeded)
+                    return Request.CreateErrorResponse(HttpStatusCode.InternalServerError, result.Errors.ToString());
+
+                try
+                {
+                    UserManager.AddToRole(user.Id, model.UserRole);
+                }
+                catch
+                {
+                    return Request.CreateErrorResponse(HttpStatusCode.Conflict, "The user role could not be added.");
+                }
+
+                return Request.CreateResponse(HttpStatusCode.OK, user);
+            }
+            catch (Exception ex)
+            {
+                return Request.CreateErrorResponse(HttpStatusCode.InternalServerError, "Something went wrong. Exception: " + ex);
+            }
         }
 
-
-
-
+        //DELETE /api/Account
         [AllowAnonymous]
         public HttpResponseMessage Delete(string id)
         {
-            var User = new User();
-            try
-            {
-                User = db.Users.Where(f => f.Id == id).FirstOrDefault();
-            } catch (Exception ex)
-            {
-                return Request.CreateErrorResponse(HttpStatusCode.Conflict, ex);
-            }
+            //Haal de user op
+            User user = db.Users.Where(f => f.Id == id).FirstOrDefault();
 
-            if (User == null)
-            {
+            if (user == null)
                 return Request.CreateErrorResponse(HttpStatusCode.NotFound, "No FormContent found with id: " + id.ToString());
-            }
             else
             {
+                //Probeer de user te verwijderen
                 try
                 {
-                    db.Users.Remove(User);
+                    db.Users.Remove(user);
                     db.SaveChanges();
                     return Request.CreateResponse(HttpStatusCode.OK);
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
-                    return Request.CreateErrorResponse(HttpStatusCode.InternalServerError, "Could not remove user");
+                    return Request.CreateErrorResponse(HttpStatusCode.InternalServerError, "Something went wrong. Exception: " + ex);
                 }
             }
         }
 
-        
+        //PUT /api/Account/{id}
         [AllowAnonymous]
         public HttpResponseMessage Put(string id, [FromBody]RegisterBindingModel model)
         {
-            User user = new User();
-            IdentityRole role = new IdentityRole();
+            //User en role opvragen.
+            User user = db.Users.Where(f => f.Id == id).FirstOrDefault();
+            IdentityRole role = db.Roles.Where(r => r.Name == model.UserRole).FirstOrDefault();
 
-            try
-            {
-                user = db.Users.Where(f => f.Id == id).FirstOrDefault();
-                role = db.Roles.Where(r => r.Name == model.UserRole).FirstOrDefault();
-            } catch (Exception ex)
-            {
-                return Request.CreateErrorResponse(HttpStatusCode.Conflict, ex);
-            }
-            
-            if (user == null)
-            {
+
+            if (user == null) //Checken of er een user is gevonden met het id
                 return Request.CreateErrorResponse(HttpStatusCode.NotFound, "No user found with id: " + id.ToString());
-            }
             else
             {
                 try
                 {
-                    if (role == null)
-                    {
-
-                        throw new System.ArgumentException("There is no userRole named: " + role.Name);
-                    }
+                    if (role == null) //Checken of er roles zijn gevonden bij de user
+                        throw new System.ArgumentException("There is no userrole named: " + role.Name);
                     else
                     {
+                        //Vervang de usre role als deze anders is
                         if (user.Roles.FirstOrDefault().RoleId != role.Id)
                         {
                             UserManager.RemoveFromRole(user.Id, role.Name);
                             UserManager.AddToRole(user.Id, model.UserRole);
                         }
+
+                        //Vervang de user Email
                         user.Email = model.Email;
                     }
-                 
 
-
+                    //Sla de changes op
                     db.SaveChanges();
                     return Request.CreateResponse(HttpStatusCode.OK, user);
                 }
                 catch (Exception ex)
                 {
-                    return Request.CreateErrorResponse(HttpStatusCode.InternalServerError, ex);
+                    return Request.CreateErrorResponse(HttpStatusCode.InternalServerError, "Something went wrong. Exception: " + ex);
                 }
             }
         }
 
-
         #region Helpers
-
 
         private IHttpActionResult GetErrorResult(IdentityResult result)
         {
@@ -274,7 +273,7 @@ namespace CloudApiVietnam.Controllers
             return null;
         }
 
-      
+
         #endregion
     }
 }

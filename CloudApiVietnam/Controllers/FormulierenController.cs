@@ -81,8 +81,13 @@ namespace CloudApiVietnam.Controllers
                 if (form == null)
                     return Request.CreateErrorResponse(HttpStatusCode.NotFound, "No form found with id: " + id.ToString());
 
-                if (form.FormTemplate == UpdateObject.FormTemplate) //check if tmeplate is changed
+                if (form.FormTemplate == UpdateObject.FormTemplate) //check if template is changed
                     return Request.CreateErrorResponse(HttpStatusCode.BadRequest, "The template hasn't been changed. Please submit a changed template.");
+
+                IsJSON isJson = IsValidJson(UpdateObject.FormTemplate);
+
+                if (!isJson.Status) // Check if new formTemplate is correct JSON
+                    return Request.CreateErrorResponse(HttpStatusCode.BadRequest, "JSON in 'template' is not correct JSON: " + isJson.Error);
 
                 var formContentList = db.FormContent.Where(s => s.FormulierenId == id).ToList(); //get all the formContents related to the form
 
@@ -95,14 +100,9 @@ namespace CloudApiVietnam.Controllers
                 form.Region = UpdateObject.Region;
                 form.FormTemplate = UpdateObject.FormTemplate;
 
-                IsJSON isJson = IsValidJson(form.FormTemplate);
-
-                if (!isJson.Status) // Check if new formTemplate is correct JSON
-                    return Request.CreateErrorResponse(HttpStatusCode.BadRequest, "JSON in 'template' is not correct JSON: " + isJson.Error);
-
                 var formTemplate = JArray.Parse(form.FormTemplate); //parse new template to JSON
 
-                if (formTemplate.Count - formContentArray.FirstOrDefault().Count > 1 || formTemplate.Count - formContentArray.FirstOrDefault().Count < -1)
+                if (formTemplate.Count - formContentArray.FirstOrDefault().Count > 1 || formTemplate.Count - formContentArray.FirstOrDefault().Count < -1) //check if only 1 key is edited
                     return Request.CreateErrorResponse(HttpStatusCode.BadRequest, "Only 1 key can be added/removed/edited at a time");
 
                 UpdateFormContent(formContentArray, formTemplate);
