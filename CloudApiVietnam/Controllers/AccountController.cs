@@ -65,7 +65,7 @@ namespace CloudApiVietnam.Controllers
 
             if (!result.Succeeded)
                 return Request.CreateErrorResponse(HttpStatusCode.InternalServerError, "The user's password could not be changed.");
-
+            
             return Request.CreateResponse(HttpStatusCode.OK);
         }
 
@@ -78,9 +78,9 @@ namespace CloudApiVietnam.Controllers
                 //Haal de users op uit de database
                 List<UserInfo> usersInfo = new List<UserInfo>();
                 List<User> users = db.Users.ToList();
-                if (users == null)
+                if(users == null)
                     return Request.CreateErrorResponse(HttpStatusCode.NoContent, "There are no users in the database.");
-
+                
                 //Zet alle users van de database om naar users die getoond kunnen worden.
                 foreach (User user in users)
                 {
@@ -94,8 +94,7 @@ namespace CloudApiVietnam.Controllers
                     usersInfo.Add(info);
                 }
                 return Request.CreateResponse(HttpStatusCode.OK, usersInfo);
-            }
-            catch (Exception ex)
+            } catch(Exception ex)
             {
                 return Request.CreateErrorResponse(HttpStatusCode.InternalServerError, "Something went wrong. Exception: " + ex);
             }
@@ -110,7 +109,7 @@ namespace CloudApiVietnam.Controllers
                 //Haal de user uit de database op
                 User user = db.Users.Where(u => u.Id == id).FirstOrDefault();
 
-                if (user == null)
+                if(user == null)
                     return Request.CreateErrorResponse(HttpStatusCode.NotFound, "No user found with id: " + id);
 
                 //Zet de user uit de database om naar een user die getoond moet worden
@@ -128,7 +127,7 @@ namespace CloudApiVietnam.Controllers
                 return Request.CreateErrorResponse(HttpStatusCode.InternalServerError, "Something went wrong. Exception: " + ex);
             }
         }
-
+               
         //POST /api/Account
         //Voor nu even AllowAnonymous voor het eenvoudig testen
         [AllowAnonymous]
@@ -169,13 +168,12 @@ namespace CloudApiVietnam.Controllers
                 }
 
                 return Request.CreateResponse(HttpStatusCode.OK, user);
-            }
-            catch (Exception ex)
+            } catch (Exception ex)
             {
                 return Request.CreateErrorResponse(HttpStatusCode.InternalServerError, "Something went wrong. Exception: " + ex);
             }
         }
-
+        
         //DELETE /api/Account
         [AllowAnonymous]
         public HttpResponseMessage Delete(string id)
@@ -208,8 +206,8 @@ namespace CloudApiVietnam.Controllers
             //User en role opvragen.
             User user = db.Users.Where(f => f.Id == id).FirstOrDefault();
             IdentityRole role = db.Roles.Where(r => r.Name == model.UserRole).FirstOrDefault();
-
-
+            
+            
             if (user == null) //Checken of er een user is gevonden met het id
                 return Request.CreateErrorResponse(HttpStatusCode.NotFound, "No user found with id: " + id.ToString());
             else
@@ -273,7 +271,7 @@ namespace CloudApiVietnam.Controllers
             return null;
         }
 
-
+      
         #endregion
     }
 }
