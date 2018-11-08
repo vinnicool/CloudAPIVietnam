@@ -123,7 +123,7 @@ namespace CloudApiVietnam.Tests.Controllers
         }
 
         [TestMethod]
-        public void Put_Succes()//
+        public void Put_Succes()
         {
             FormulierenBindingModel formBindingModel = new FormulierenBindingModel();
             FormulierenController controller = GetController();
@@ -133,7 +133,7 @@ namespace CloudApiVietnam.Tests.Controllers
             formBindingModel.Region = "test";
             formBindingModel.Name = "name";
 
-            HttpResponseMessage result = controller.Put(this.id, formBindingModel);
+            HttpResponseMessage result = controller.Put(47, formBindingModel);
             var resultContent = result.Content.ReadAsAsync<dynamic>().Result;
             Assert.AreEqual(result.StatusCode, HttpStatusCode.OK);
 
@@ -141,7 +141,7 @@ namespace CloudApiVietnam.Tests.Controllers
             formBindingModel.Region = "test";
             formBindingModel.Name = "name";
 
-            result = controller.Put(this.id, formBindingModel);
+            result = controller.Put(47, formBindingModel);
             resultContent = result.Content.ReadAsAsync<dynamic>().Result;
             Assert.AreEqual(result.StatusCode, HttpStatusCode.OK);
 
@@ -149,7 +149,7 @@ namespace CloudApiVietnam.Tests.Controllers
             formBindingModel.Region = "test";
             formBindingModel.Name = "name";
 
-            result = controller.Put(this.id, formBindingModel);
+            result = controller.Put(47, formBindingModel);
             resultContent = result.Content.ReadAsAsync<dynamic>().Result;
             Assert.AreEqual(result.StatusCode, HttpStatusCode.OK);
             Assert.IsNotNull(resultContent);
