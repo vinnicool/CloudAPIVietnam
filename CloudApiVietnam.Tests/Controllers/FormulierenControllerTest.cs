@@ -123,7 +123,7 @@ namespace CloudApiVietnam.Tests.Controllers
         }
 
         [TestMethod]
-        public void Put_Edit_Succes()
+        public void Put_Succes()
         {
             FormulierenBindingModel formBindingModel = new FormulierenBindingModel();
             FormulierenController controller = GetController();
@@ -135,46 +135,61 @@ namespace CloudApiVietnam.Tests.Controllers
 
             HttpResponseMessage result = controller.Put(this.id, formBindingModel);
             var resultContent = result.Content.ReadAsAsync<dynamic>().Result;
-            // Assert
             Assert.AreEqual(result.StatusCode, HttpStatusCode.OK);
-            Assert.IsNotNull(resultContent);
-        }
-
-        [TestMethod]
-        public void Put_Add_Succes()
-        {
-            FormulierenBindingModel formBindingModel = new FormulierenBindingModel();
-            FormulierenController controller = GetController();
-            Random rnd = new Random();
-
-            formBindingModel.FormTemplate = "[{'Naam':'testnaam'},{'Leeftijd':'22'},{'Afwijking':'string'}]";
-            formBindingModel.Region = "test";
-            formBindingModel.Name = "name";
-
-            HttpResponseMessage result = controller.Put(this.id, formBindingModel);
-            var resultContent = result.Content.ReadAsAsync<dynamic>().Result;
-            // Assert
-            Assert.AreEqual(result.StatusCode, HttpStatusCode.OK);
-            Assert.IsNotNull(resultContent);
-        }
-
-        [TestMethod]
-        public void Put_Delete_Succes()
-        {
-            FormulierenBindingModel formBindingModel = new FormulierenBindingModel();
-            FormulierenController controller = GetController();
-            Random rnd = new Random();
 
             formBindingModel.FormTemplate = "[{'Naam':'testnaam'},{'Leeftijd':'22'}]";
             formBindingModel.Region = "test";
             formBindingModel.Name = "name";
 
-            HttpResponseMessage result = controller.Put(this.id, formBindingModel);
-            var resultContent = result.Content.ReadAsAsync<dynamic>().Result;
-            // Assert
+            result = controller.Put(this.id, formBindingModel);
+            resultContent = result.Content.ReadAsAsync<dynamic>().Result;
+            Assert.AreEqual(result.StatusCode, HttpStatusCode.OK);
+
+            formBindingModel.FormTemplate = "[{'Naam':'testnaam'},{'Leeftijd':'22'},{'Afwijking':'string'}]";
+            formBindingModel.Region = "test";
+            formBindingModel.Name = "name";
+
+            result = controller.Put(this.id, formBindingModel);
+            resultContent = result.Content.ReadAsAsync<dynamic>().Result;
             Assert.AreEqual(result.StatusCode, HttpStatusCode.OK);
             Assert.IsNotNull(resultContent);
         }
+
+        //[TestMethod]
+        //public void Put_Add_Succes()
+        //{
+        //    FormulierenBindingModel formBindingModel = new FormulierenBindingModel();
+        //    FormulierenController controller = GetController();
+        //    Random rnd = new Random();
+
+        //    formBindingModel.FormTemplate = "[{'Naam':'testnaam'},{'Leeftijd':'22'},{'Afwijking':'string'}]";
+        //    formBindingModel.Region = "test";
+        //    formBindingModel.Name = "name";
+
+        //    HttpResponseMessage result = controller.Put(this.id, formBindingModel);
+        //    var resultContent = result.Content.ReadAsAsync<dynamic>().Result;
+        //    // Assert
+        //    Assert.AreEqual(result.StatusCode, HttpStatusCode.OK);
+        //    Assert.IsNotNull(resultContent);
+        //}
+
+        //[TestMethod]
+        //public void Put_Delete_Succes()
+        //{
+        //    FormulierenBindingModel formBindingModel = new FormulierenBindingModel();
+        //    FormulierenController controller = GetController();
+        //    Random rnd = new Random();
+
+        //    formBindingModel.FormTemplate = "[{'Naam':'testnaam'},{'Leeftijd':'22'}]";
+        //    formBindingModel.Region = "test";
+        //    formBindingModel.Name = "name";
+
+        //    HttpResponseMessage result = controller.Put(this.id, formBindingModel);
+        //    var resultContent = result.Content.ReadAsAsync<dynamic>().Result;
+        //    // Assert
+        //    Assert.AreEqual(result.StatusCode, HttpStatusCode.OK);
+        //    Assert.IsNotNull(resultContent);
+        //}
 
         [TestMethod]
         [TestCleanup()]
