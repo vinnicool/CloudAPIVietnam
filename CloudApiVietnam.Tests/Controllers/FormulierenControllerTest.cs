@@ -123,7 +123,7 @@ namespace CloudApiVietnam.Tests.Controllers
         }
 
         [TestMethod]
-        public void Put_Succes()
+        public void Put_Succes()//
         {
             FormulierenBindingModel formBindingModel = new FormulierenBindingModel();
             FormulierenController controller = GetController();
