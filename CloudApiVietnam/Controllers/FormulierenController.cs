@@ -36,7 +36,7 @@ namespace CloudApiVietnam.Controllers
             var formulier = db.Formulieren.Include("FormContent").Where(f => f.Id == id).FirstOrDefault();
             if (formulier == null)
             {
-                return Request.CreateErrorResponse(HttpStatusCode.NotFound, "No FormContent found with id: " + id.ToString());
+                return Request.CreateErrorResponse(HttpStatusCode.NotFound, "No Form found with id: " + id.ToString());
             }
             else
             {
@@ -134,7 +134,7 @@ namespace CloudApiVietnam.Controllers
 
         public HttpResponseMessage Delete(int id)
         {
-            var formulier = db.FormContent.Where(f => f.Id == id).FirstOrDefault();
+            var formulier = db.Formulieren.Where(f => f.Id == id).FirstOrDefault();
 
             if (formulier == null)
             {
@@ -144,7 +144,7 @@ namespace CloudApiVietnam.Controllers
             {
                 try
                 {
-                    db.FormContent.Remove(formulier);
+                    db.Formulieren.Remove(formulier);
                     db.SaveChanges();
                     return Request.CreateResponse(HttpStatusCode.OK);
                 }
