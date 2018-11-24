@@ -14,7 +14,7 @@ namespace CloudApiVietnam.Controllers
     [Authorize]
     public class FormulierenController : ApiController
     {
-        ApplicationDbContext db = new ApplicationDbContext();
+        private ApplicationDbContext db = new ApplicationDbContext();
 
         // GET alle Formulieren
         public HttpResponseMessage Get()
@@ -34,14 +34,10 @@ namespace CloudApiVietnam.Controllers
         public HttpResponseMessage Get(int id)
         {
             var formulier = db.Formulieren.Include("FormContent").Where(f => f.Id == id).FirstOrDefault();
-            if (formulier == null)
-            {
-                return Request.CreateErrorResponse(HttpStatusCode.NotFound, "No Form found with id: " + id.ToString());
-            }
+            if (formulier == null)           
+                return Request.CreateErrorResponse(HttpStatusCode.NotFound, "No Form found with id: " + id.ToString());           
             else
-            {
                 return Request.CreateResponse(HttpStatusCode.OK, formulier);
-            }
         }
 
 
@@ -50,16 +46,18 @@ namespace CloudApiVietnam.Controllers
         {
             try
             {
-                IsJSON isJson = IsValidJson(formulierenBindingModel.FormTemplate); // Check of JSON klopt en maak resultaat object
-                if (!isJson.Status) // als resultaat object status fals is return error
-                {
+                var isJson = IsValidJson(formulierenBindingModel.FormTemplate); // Check of JSON klopt en maak resultaat object
+                if(!isJson.Status) // als resultaat object status false is return error             
                     return Request.CreateErrorResponse(HttpStatusCode.BadRequest, "JSON in 'content' is not correct JSON: " + isJson.Error);
-                }
 
-                Formulieren formulier = new Formulieren();
-                formulier.Name = formulierenBindingModel.Name;
-                formulier.Region = formulierenBindingModel.Region;
-                formulier.FormTemplate = formulierenBindingModel.FormTemplate;
+                var formulier = new Formulieren()
+                {
+                    Name = formulierenBindingModel.Name,
+                    Region = formulierenBindingModel.Region,
+                    FormTemplate = formulierenBindingModel.FormTemplate,
+                    CreatedOn = formulierenBindingModel.CreatedOn,
+                    UpdatedOn = formulierenBindingModel.UpdatedOn
+                };
 
                 db.Formulieren.Add(formulier);
                 db.SaveChanges();
@@ -84,7 +82,7 @@ namespace CloudApiVietnam.Controllers
                 if (form.FormTemplate == UpdateObject.FormTemplate) //check if template is changed
                     return Request.CreateErrorResponse(HttpStatusCode.BadRequest, "The template hasn't been changed. Please submit a changed template.");
 
-                IsJSON isJson = IsValidJson(UpdateObject.FormTemplate);
+                var isJson = IsValidJson(UpdateObject.FormTemplate);
 
                 if (!isJson.Status) // Check if new formTemplate is correct JSON
                     return Request.CreateErrorResponse(HttpStatusCode.BadRequest, "JSON in 'template' is not correct JSON: " + isJson.Error);
@@ -113,15 +111,13 @@ namespace CloudApiVietnam.Controllers
 
                 UpdateFormContent(formContentArray, formTemplate);
 
-                foreach (var content in formContentList)
-                {
+                foreach (var content in formContentList)               
                     foreach (var newContent in formContentArray)
                     {
                         content.Content = newContent.ToString();
                         db.Entry(content).State = EntityState.Modified;
                         db.SaveChanges();
-                    }
-                }
+                    }               
 
                 return Request.CreateResponse(HttpStatusCode.OK, form);
             }

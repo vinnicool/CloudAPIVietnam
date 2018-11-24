@@ -15,6 +15,8 @@ namespace CloudApiVietnam.Models
 
         public string Region { get; set; }
         public string FormTemplate { get; set; }
+        public DateTime CreatedOn { get; set; }
+        public DateTime UpdatedOn { get; set; }
         public List<FormContent> FormContent { get; set; }
     }
 }

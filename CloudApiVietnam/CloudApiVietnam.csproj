@@ -313,10 +313,18 @@
     <Compile Include="Migrations\201811061910549_IgnoreCliamsAndLogins.Designer.cs">
       <DependentUpon>201811061910549_IgnoreCliamsAndLogins.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201811241151591_datetimeforforms.cs" />
+    <Compile Include="Migrations\201811241151591_datetimeforforms.Designer.cs">
+      <DependentUpon>201811241151591_datetimeforforms.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201811241310105_renamedatetimesofform.cs" />
+    <Compile Include="Migrations\201811241310105_renamedatetimesofform.Designer.cs">
+      <DependentUpon>201811241310105_renamedatetimesofform.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\AccountBindingModels.cs" />
     <Compile Include="Models\AccountViewModels.cs" />
-    <Compile Include="Models\ContentEqeulsHeadersCheck.cs" />
+    <Compile Include="Models\ContentEqualsHeadersCheck.cs" />
     <Compile Include="Models\FormContent.cs" />
     <Compile Include="Models\FormContentBindingModel.cs" />
     <Compile Include="Models\ImageBindingModel.cs" />
@@ -386,6 +394,7 @@
     <Content Include="Scripts\esm\popper-utils.min.js.map" />
     <Content Include="Scripts\esm\popper-utils.js.map" />
     <None Include="Properties\PublishProfiles\CloudApiVietnam - Web Deploy.pubxml" />
+    <None Include="Properties\PublishProfiles\CloudApiVincent - Web Deploy.pubxml" />
     <None Include="Scripts\jquery-3.3.1.intellisense.js" />
     <Content Include="Scripts\jquery-3.3.1.js" />
     <Content Include="Scripts\jquery-3.3.1.min.js" />
@@ -490,6 +499,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201811061910549_IgnoreCliamsAndLogins.resx">
       <DependentUpon>201811061910549_IgnoreCliamsAndLogins.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201811241151591_datetimeforforms.resx">
+      <DependentUpon>201811241151591_datetimeforforms.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201811241310105_renamedatetimesofform.resx">
+      <DependentUpon>201811241310105_renamedatetimesofform.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>

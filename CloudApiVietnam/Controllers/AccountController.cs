@@ -25,7 +25,7 @@ namespace CloudApiVietnam.Controllers
     [RoutePrefix("api/Account")]
     public class AccountController : ApiController
     {
-        ApplicationDbContext db = new ApplicationDbContext();
+        private ApplicationDbContext db = new ApplicationDbContext();
         private const string LocalLoginProvider = "Local";
         private ApplicationUserManager _userManager;
 
@@ -61,7 +61,7 @@ namespace CloudApiVietnam.Controllers
             if (!ModelState.IsValid)
                 return Request.CreateErrorResponse(HttpStatusCode.BadRequest, ModelState);
 
-            IdentityResult result = UserManager.ChangePassword(User.Identity.GetUserId(), model.OldPassword, model.NewPassword);
+            var result = UserManager.ChangePassword(User.Identity.GetUserId(), model.OldPassword, model.NewPassword);
 
             if (!result.Succeeded)
                 return Request.CreateErrorResponse(HttpStatusCode.InternalServerError, "The user's password could not be changed.");
@@ -74,26 +74,18 @@ namespace CloudApiVietnam.Controllers
         public HttpResponseMessage Get()
         {
             try
-            {
-                //Haal de users op uit de database
-                List<UserInfo> usersInfo = new List<UserInfo>();
-                List<User> users = db.Users.ToList();
+            {              
+                var users = db.Users.Select(x => new UserInfo
+                {
+                    Id = x.Id,
+                    Email = x.Email,
+                    Roles = x.Roles,
+                    UserName = x.UserName
+                });
+
                 if(users == null)
                     return Request.CreateErrorResponse(HttpStatusCode.NoContent, "There are no users in the database.");
-                
-                //Zet alle users van de database om naar users die getoond kunnen worden.
-                foreach (User user in users)
-                {
-                    UserInfo info = new UserInfo
-                    {
-                        Id = user.Id,
-                        Email = user.Email,
-                        Roles = user.Roles,
-                        UserName = user.UserName
-                    };
-                    usersInfo.Add(info);
-                }
-                return Request.CreateResponse(HttpStatusCode.OK, usersInfo);
+                return Request.CreateResponse(HttpStatusCode.OK, users);
             } catch(Exception ex)
             {
                 return Request.CreateErrorResponse(HttpStatusCode.InternalServerError, "Something went wrong. Exception: " + ex);
@@ -107,13 +99,13 @@ namespace CloudApiVietnam.Controllers
             try
             {
                 //Haal de user uit de database op
-                User user = db.Users.Where(u => u.Id == id).FirstOrDefault();
+                var user = db.Users.Where(u => u.Id == id).FirstOrDefault();
 
                 if(user == null)
                     return Request.CreateErrorResponse(HttpStatusCode.NotFound, "No user found with id: " + id);
 
                 //Zet de user uit de database om naar een user die getoond moet worden
-                UserInfo info = new UserInfo
+                var info = new UserInfo
                 {
                     Id = user.Id,
                     Email = user.Email,
@@ -129,8 +121,9 @@ namespace CloudApiVietnam.Controllers
         }
                
         //POST /api/Account
-        //Voor nu even AllowAnonymous voor het eenvoudig testen[]
-        [Authorize(Roles ="Admin")]
+        //Voor nu even AllowAnonymous voor het eenvoudig testen
+        //[Authorize(Roles ="Admin")]
+        [AllowAnonymous]
         public HttpResponseMessage Post(RegisterBindingModel model)
         {
             try
@@ -145,26 +138,26 @@ namespace CloudApiVietnam.Controllers
                     Email = model.Email
                 };
 
-                IdentityResult result = new IdentityResult();
+                var result = new IdentityResult();
                 try
                 {
                     result = UserManager.Create(user, model.Password);
                 }
-                catch
+                catch (Exception ex)
                 {
-                    return Request.CreateErrorResponse(HttpStatusCode.Conflict, "The user could not be added.");
+                    return Request.CreateErrorResponse(HttpStatusCode.Conflict, "The user could not be added. Exception: " + ex);
                 }
 
-                if (!result.Succeeded)
-                    return Request.CreateErrorResponse(HttpStatusCode.InternalServerError, result.Errors.ToString());
+                if(!result.Succeeded)
+                    return Request.CreateErrorResponse(HttpStatusCode.InternalServerError, string.Join("/n", result.Errors));
 
                 try
                 {
                     UserManager.AddToRole(user.Id, model.UserRole);
                 }
-                catch
+                catch (Exception ex)
                 {
-                    return Request.CreateErrorResponse(HttpStatusCode.Conflict, "The user role could not be added.");
+                    return Request.CreateErrorResponse(HttpStatusCode.Conflict, "The user role could not be added. Exception: " + ex);
                 }
 
                 return Request.CreateResponse(HttpStatusCode.OK, user);
@@ -179,7 +172,7 @@ namespace CloudApiVietnam.Controllers
         public HttpResponseMessage Delete(string id)
         {
             //Haal de user op
-            User user = db.Users.Where(f => f.Id == id).FirstOrDefault();
+            var user = db.Users.Where(f => f.Id == id).FirstOrDefault();
 
             if (user == null)
                 return Request.CreateErrorResponse(HttpStatusCode.NotFound, "No FormContent found with id: " + id.ToString());
@@ -204,9 +197,8 @@ namespace CloudApiVietnam.Controllers
         public HttpResponseMessage Put(string id, [FromBody]RegisterBindingModel model)
         {
             //User en role opvragen.
-            User user = db.Users.Where(f => f.Id == id).FirstOrDefault();
-            IdentityRole role = db.Roles.Where(r => r.Name == model.UserRole).FirstOrDefault();
-            
+            var user = db.Users.Where(f => f.Id == id).FirstOrDefault();
+            var role = db.Roles.Where(r => r.Name == model.UserRole).FirstOrDefault();
             
             if (user == null) //Checken of er een user is gevonden met het id
                 return Request.CreateErrorResponse(HttpStatusCode.NotFound, "No user found with id: " + id.ToString());
@@ -215,7 +207,7 @@ namespace CloudApiVietnam.Controllers
                 try
                 {
                     if (role == null) //Checken of er roles zijn gevonden bij de user
-                        throw new System.ArgumentException("There is no userrole named: " + role.Name);
+                        throw new ArgumentException("There is no userrole named: " + role.Name);
                     else
                     {
                         //Vervang de usre role als deze anders is
@@ -244,34 +236,23 @@ namespace CloudApiVietnam.Controllers
 
         private IHttpActionResult GetErrorResult(IdentityResult result)
         {
-            if (result == null)
-            {
+            if (result == null)           
                 return InternalServerError();
-            }
-
+            
             if (!result.Succeeded)
             {
-                if (result.Errors != null)
-                {
-                    foreach (string error in result.Errors)
-                    {
-                        ModelState.AddModelError("", error);
-                    }
-                }
-
-                if (ModelState.IsValid)
-                {
-                    // No ModelState errors are available to send, so just return an empty BadRequest.
-                    return BadRequest();
-                }
+                if (result.Errors != null)               
+                    foreach (string error in result.Errors)                   
+                        ModelState.AddModelError("", error);                   
+                
+                if (ModelState.IsValid) //No modelstate errors, so we send a badrequest                                
+                    return BadRequest();                
 
                 return BadRequest(ModelState);
             }
 
             return null;
-        }
-
-      
+        }     
         #endregion
     }
 }

@@ -13,7 +13,7 @@ namespace CloudApiVietnam.Migrations
             ContextKey = "CloudApiVietnam.Models.ApplicationDbContext";
         }
 
-        protected override void Seed(CloudApiVietnam.Models.ApplicationDbContext context)
+        protected override void Seed(Models.ApplicationDbContext context)
         {
             //  This method will be called after migrating to the latest version.
 

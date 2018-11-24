@@ -5,7 +5,7 @@ using System.Web;
 
 namespace CloudApiVietnam.Models
 {
-    public class ContentEqeulsHeadersCheck
+    public class ContentEqualsHeadersCheck
     {
         public string Error { get; set; }
         public bool Status { get; set; }
