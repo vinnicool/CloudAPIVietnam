@@ -4,6 +4,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Data.Entity;
+using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -12,16 +13,33 @@ using System.Web.Http;
 namespace CloudApiVietnam.Controllers
 {
     [Authorize]
+    [RoutePrefix("api/Forms")]
     public class FormulierenController : ApiController
     {
         private ApplicationDbContext db = new ApplicationDbContext();
 
-        // GET alle Formulieren
+        // GET alle Formulieren     
         public HttpResponseMessage Get()
         {
             try
             {
                 var formulieren = db.Formulieren.Include("FormContent").ToList();
+                return Request.CreateResponse(HttpStatusCode.OK, formulieren);
+            }
+            catch (Exception ex)
+            {
+                return Request.CreateErrorResponse(HttpStatusCode.BadRequest, ex);
+            }
+        }
+
+        //GET alle formulieren gemaakt sinds fromDateTime
+        [Route("filter/{fromDateTime}")]
+        public HttpResponseMessage Get([FromUri] string fromDateTime)
+        {
+            try
+            {
+                var dt = DateTime.ParseExact(fromDateTime, "yyyyMMddHHmmss", CultureInfo.InvariantCulture);
+                var formulieren = db.Formulieren.Include("FormContent").Where(f => f.CreatedOn >= dt).ToList();
                 return Request.CreateResponse(HttpStatusCode.OK, formulieren);
             }
             catch (Exception ex)
@@ -39,7 +57,6 @@ namespace CloudApiVietnam.Controllers
             else
                 return Request.CreateResponse(HttpStatusCode.OK, formulier);
         }
-
 
         // POST een Formulier
         public HttpResponseMessage Post(FormulierenBindingModel formulierenBindingModel)

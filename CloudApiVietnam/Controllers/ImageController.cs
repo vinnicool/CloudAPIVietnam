@@ -79,8 +79,8 @@ namespace CloudApiVietnam.Controllers
             {
                 try
                 {
-                    var image = db.Image.Where(f => f.name == id).FirstOrDefault();
-                    imageStream = new MemoryStream(image.image);
+                    var image = db.Image.Where(f => f.Name == id).FirstOrDefault();
+                    imageStream = new MemoryStream(image.ImageData);
                 }
                 catch (Exception e)
                 {
@@ -148,7 +148,7 @@ namespace CloudApiVietnam.Controllers
                     {
                         await AzureStorageAsync(imageStream, blobNameReference);
                         var image = new Image();
-                        image.name = blobNameReference;
+                        image.Name = blobNameReference;
                         imageList.Add(image);
                     }
                     catch (Exception e)
@@ -162,11 +162,11 @@ namespace CloudApiVietnam.Controllers
                     {
                         var image = new Image
                         {
-                            name = blobNameReference,
-                            image = ConvertStreamToBytes(imageStream)
+                            Name = blobNameReference,
+                            ImageData = ConvertStreamToBytes(imageStream)
                         };
                         SqlStorage(image);
-                        image.image = null;
+                        image.ImageData = null;
                         imageList.Add(image);
                     }
                     catch (Exception e)
@@ -224,7 +224,7 @@ namespace CloudApiVietnam.Controllers
             {
                 try
                 {
-                    var image = db.Image.Where(f => f.name == id).FirstOrDefault();
+                    var image = db.Image.Where(f => f.Name == id).FirstOrDefault();
                     db.Image.Remove(image);
                     db.SaveChanges();
                 }

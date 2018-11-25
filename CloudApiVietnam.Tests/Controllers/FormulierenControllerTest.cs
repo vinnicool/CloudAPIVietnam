@@ -17,21 +17,19 @@ namespace CloudApiVietnam.Tests.Controllers
     [TestClass]
     public class FormulierenControllerTest
     {
-        FormulierenController controller = new FormulierenController();
         private int id;
         [TestMethod]
         [TestInitialize()]
         public void FormGet_Ok()
         {
-            // Arramge
+            // Arrange
             FormulierenController controller = GetController();
 
             // Act
             HttpResponseMessage actionResult = controller.Get();
 
             // Assert
-            List<Formulieren> formulier;
-            Assert.IsTrue(actionResult.TryGetContentValue<List<Formulieren>>(out formulier));
+            Assert.IsTrue(actionResult.TryGetContentValue(out List<Formulieren> formulier));
             this.id = formulier.FirstOrDefault().Id;
             Assert.AreEqual(actionResult.StatusCode, HttpStatusCode.OK);
         }
@@ -40,7 +38,7 @@ namespace CloudApiVietnam.Tests.Controllers
         {
             return new FormulierenController
             {
-                Request = new System.Net.Http.HttpRequestMessage(),
+                Request = new HttpRequestMessage(),
                 Configuration = new HttpConfiguration()
             };
         }
@@ -48,7 +46,7 @@ namespace CloudApiVietnam.Tests.Controllers
         [TestMethod]
         public void FormGetWithId_Ok()
         {
-            // Arramge
+            // Arrange
             FormulierenController controller = GetController();
 
             // Act
@@ -62,7 +60,7 @@ namespace CloudApiVietnam.Tests.Controllers
         [TestMethod]
         public void FormGetWithId_NotFound()
         {
-            // Arramge
+            // Arrange
             FormulierenController controller = GetController();
 
             // Act
@@ -75,12 +73,16 @@ namespace CloudApiVietnam.Tests.Controllers
         [TestMethod]
         public void FormPost_Ok()
         {
-            // Arramge
+            // Arrange
             FormulierenController controller = GetController();
-            FormulierenBindingModel formulierenBindingModel = new FormulierenBindingModel();
-            formulierenBindingModel.Name = "Testformulier9999";
-            formulierenBindingModel.Region = "Zuid-Holland";
-            formulierenBindingModel.FormTemplate = "[{'Naam':'string'},{'Leeftijd':'string'},{'Afwijking':'string'}]";
+            FormulierenBindingModel formulierenBindingModel = new FormulierenBindingModel
+            {
+                Name = "Testformulier9999",
+                CreatedOn = DateTime.UtcNow.AddDays(-1),
+                UpdatedOn = DateTime.UtcNow.AddDays(1),
+                Region = "Zuid-Holland",
+                FormTemplate = "[{'Naam':'string'},{'Leeftijd':'string'},{'Afwijking':'string'}]"
+            };
 
             // Act
             HttpResponseMessage actionResult = controller.Post(formulierenBindingModel);
@@ -92,14 +94,17 @@ namespace CloudApiVietnam.Tests.Controllers
         [TestMethod]
         public void FormPost_BadRequest()
         {
-            // Arramge
-            // Arramge
+            // Arrange
             FormulierenController controller = GetController();
 
-            FormulierenBindingModel formulierenBindingModel = new FormulierenBindingModel();
-            formulierenBindingModel.Name = "Testformulier9999";
-            formulierenBindingModel.Region = "Zuid-Holland";
-            formulierenBindingModel.FormTemplate = "{iets:data";
+            FormulierenBindingModel formulierenBindingModel = new FormulierenBindingModel
+            {
+                Name = "Testformulier9999",
+                CreatedOn = DateTime.UtcNow.AddDays(-1),
+                UpdatedOn = DateTime.UtcNow.AddDays(1),
+                Region = "Zuid-Holland",
+                FormTemplate = "{iets:data"
+            };
 
             // Act
             HttpResponseMessage actionResult = controller.Post(formulierenBindingModel);
@@ -111,7 +116,7 @@ namespace CloudApiVietnam.Tests.Controllers
         [TestMethod]
         public void FormDeleteWithId_NotFound()
         {
-            // Arramge
+            // Arrange
             FormulierenController controller = GetController();
 
             // Act
@@ -127,10 +132,11 @@ namespace CloudApiVietnam.Tests.Controllers
         {
             FormulierenBindingModel formBindingModel = new FormulierenBindingModel();
             FormulierenController controller = GetController();
-            Random rnd = new Random();//rnd
+            Random rnd = new Random();
 
             formBindingModel.FormTemplate = "[{'Naam':'string'},{'Leeftijd':'22'},{'" + rnd.Next(1, 100).ToString() + "':'ADHD'}]";
             formBindingModel.Region = "test";
+            formBindingModel.UpdatedOn = DateTime.UtcNow;
             formBindingModel.Name = "name";
 
             HttpResponseMessage result = controller.Put(47, formBindingModel);
@@ -138,6 +144,7 @@ namespace CloudApiVietnam.Tests.Controllers
             Assert.AreEqual(result.StatusCode, HttpStatusCode.OK);
 
             formBindingModel.FormTemplate = "[{'Naam':'string'},{'Leeftijd':'22'}]";
+            formBindingModel.UpdatedOn = DateTime.UtcNow;
             formBindingModel.Region = "test";
             formBindingModel.Name = "name";
 
@@ -146,6 +153,7 @@ namespace CloudApiVietnam.Tests.Controllers
             Assert.AreEqual(result.StatusCode, HttpStatusCode.OK);
 
             formBindingModel.FormTemplate = "[{'Naam':'string'},{'Leeftijd':'22'},{'Afwijking':'string'}]";
+            formBindingModel.UpdatedOn = DateTime.UtcNow;
             formBindingModel.Region = "test";
             formBindingModel.Name = "name";
 
